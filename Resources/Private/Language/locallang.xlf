@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.0">
+    <file source-language="en" datatype="plaintext" original="messages">
+        <header/>
+        <body>
+            <trans-unit id="flush_index_title">
+                <source>Flush Index</source>
+            </trans-unit>
+            <trans-unit id="flush_index_description">
+                <source>Are you sure you want to flush the index "%s"?</source>
+            </trans-unit>
+            <trans-unit id="flush_index_confirm">
+                <source>Flush!</source>
+            </trans-unit>
+            <trans-unit id="actions.flush.no_index_given">
+                <source>No flush index given</source>
+            </trans-unit>
+            <trans-unit id="actions.flush.index_flushed">
+                <source>Index "%s" flushed.</source>
+            </trans-unit>
+            <trans-unit id="actions.flush.no_index_flushed">
+                <source>Index "%s" not flushed, error received.</source>
+            </trans-unit>
+        </body>
+    </file>
+</xliff>

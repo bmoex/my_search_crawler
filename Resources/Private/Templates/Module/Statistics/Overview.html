@@ -1,0 +1,57 @@
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+      data-namespace-typo3-fluid="true">
+<f:layout name="Backend"/>
+
+<f:section name="Content">
+    <f:if condition="{cluster}">
+        <div class="callout callout-info">
+            <div class="media">
+                <div class="media-left">
+                    <span class="fa-stack fa-lg callout-icon">
+                        <i class="fa fa-circle fa-stack-2x"></i>
+                        <i class="fa fa-info fa-stack-1x"></i>
+                    </span>
+                </div>
+                <div class="media-body">
+                    <h4 class="callout-title">Cluster information</h4>
+                    <div class="callout-body">
+                        <dl class="dl-horizontal">
+
+                            <dt>Name:</dt>
+                            <dd>{cluster.cluster_name}</dd>
+
+                            <dt>UUID:</dt>
+                            <dd>{cluster.cluster_uuid}</dd>
+
+                            <dt>Version:</dt>
+                            <dd>ES: {cluster.version.number}, Lucene: {cluster.version.lucene_version}</dd>
+
+                            <dt>Tagline:</dt>
+                            <dd>{cluster.tagline}</dd>
+
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </f:if>
+
+    <f:if condition="{indices}">
+        <table id="my-search-crawler-indices" class="table table-striped table-hover">
+            <thead>
+            <tr>
+                <th class="col-icon"></th>
+                <th class="col-title">Name</th>
+                <th class="col-total">Documents</th>
+                <th class="col-control"></th>
+            </tr>
+            </thead>
+            <tbody>
+            <f:for each="{indices}" as="index" key="identifier">
+                <f:render partial="Backend/Index/ListItem" arguments="{name: identifier, total: index.total.docs.count}"/>
+            </f:for>
+            </tbody>
+        </table>
+    </f:if>
+</f:section>
+</html>

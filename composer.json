@@ -1,0 +1,42 @@
+{
+    "name": "serfhos/my-search-crawler",
+    "description": "TYPO3 Extension: Elastic Indexing web crawler based on RealURL (tx_realurl_urldata)",
+    "type": "typo3-cms-extension",
+
+    "keywords": [
+        "TYPO3",
+        "CMS",
+        "Serfhos",
+        "Benjamin Serfhos",
+        "Extbase",
+        "Elastic",
+        "Index",
+        "Search"
+    ],
+    "homepage": "https://github.com/bmoex/my_search_crawler",
+    "license": "LGPL-3.0+",
+    "require": {
+        "typo3/cms-core": ">=8.7.0 <9.0.0",
+        "typo3/cms-frontend": ">8.7.0 <9.0.0",
+        "typo3/cms-scheduler": ">=8.7.0 <9.0.0"
+    },
+
+    "replace": {
+        "my_search_crawler": "self.version",
+        "typo3-ter/my-search-crawler": "self.version"
+    },
+
+    "autoload": {
+        "psr-4": {
+            "Serfhos\\MySearchCrawler\\": "Classes/"
+        }
+    },
+
+    "authors": [
+        {
+            "name": "Benjamin Serfhos",
+            "email": "benjamin@serfhos.com",
+            "homepage": "http://serfhos.com"
+        }
+    ]
+}
