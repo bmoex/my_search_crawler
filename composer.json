@@ -18,7 +18,9 @@
     "require": {
         "typo3/cms-core": ">=8.7.0 <9.0.0",
         "typo3/cms-frontend": ">8.7.0 <9.0.0",
-        "typo3/cms-scheduler": ">=8.7.0 <9.0.0"
+        "typo3/cms-scheduler": ">=8.7.0 <9.0.0",
+        "elasticsearch/elasticsearch": "^6.0",
+        "symfony/dom-crawler": "^3.4"
     },
 
     "replace": {
