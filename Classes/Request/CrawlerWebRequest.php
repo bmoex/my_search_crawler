@@ -18,10 +18,11 @@ use TYPO3\CMS\Extbase\Object\ObjectManager;
  */
 class CrawlerWebRequest
 {
+
     /**
      * @var \Psr\Http\Message\ResponseInterface
      */
-    protected $request;
+    public $request;
 
     /**
      * @var Crawler
@@ -37,12 +38,7 @@ class CrawlerWebRequest
     public function __construct(Client $client, string $uri)
     {
         try {
-            $this->request = $client->get($uri, [
-                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0)'
-                    . ' AppleWebKit/537.36 (KHTML, like Gecko)'
-                    . ' Chrome/48.0.2564.97'
-                    . ' Safari/537.36'
-            ]);
+            $this->request = $client->get($uri);
             $this->crawler = new Crawler(
                 (string)$this->request->getBody(),
                 $uri,
@@ -141,13 +137,29 @@ class CrawlerWebRequest
         $metaTags = [];
         try {
             $this->crawler->filter('meta')->each(function (Crawler $node) use (&$metaTags) {
+                $name = $content = null;
                 if ($node->attr('name') && $node->attr('name') !== 'viewport') {
-                    $metaTags[$node->attr('name')] = $node->attr('content');
-                    return;
+                    $name = $node->attr('name');
+                    $content = $node->attr('content');
                 }
                 if ($node->attr('property')) {
-                    $metaTags[$node->attr('property')] = $node->attr('content');
-                    return;
+                    $name = $node->attr('property');
+                    $content = $node->attr('content');
+                }
+
+                if ($name && $content) {
+                    if (isset($metaTags[$name])) {
+                        if (is_array($metaTags[$name])) {
+                            $metaTags[$name][] = $content;
+                        } else {
+                            $metaTags[$name] = [
+                                $metaTags[$name],
+                                $content
+                            ];
+                        }
+                    } else {
+                        $metaTags[$name] = $content;
+                    }
                 }
             });
         } catch (InvalidArgumentException $e) {

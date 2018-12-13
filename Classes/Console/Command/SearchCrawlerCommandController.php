@@ -9,6 +9,8 @@ use Serfhos\MySearchCrawler\Exception\RequestNotFoundException;
 use Serfhos\MySearchCrawler\Request\CrawlerWebRequest;
 use Serfhos\MySearchCrawler\Service\ElasticSearchService;
 use Serfhos\MySearchCrawler\Service\QueueService;
+use Serfhos\MySearchCrawler\Service\SimulatedUserService;
+use Serfhos\MySearchCrawler\Utility\ConfigurationUtility;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
@@ -35,6 +37,11 @@ class SearchCrawlerCommandController extends CommandController
     protected $queueService;
 
     /**
+     * @var SimulatedUserService
+     */
+    protected $simulatedUserService;
+
+    /**
      * @var array
      */
     protected $domains = [];
@@ -44,11 +51,16 @@ class SearchCrawlerCommandController extends CommandController
      *
      * @param QueueService $queueService
      * @param ElasticSearchService $elasticSearchService
+     * @param SimulatedUserService $simulatedUserService
      */
-    public function __construct(QueueService $queueService, ElasticSearchService $elasticSearchService)
-    {
+    public function __construct(
+        QueueService $queueService,
+        ElasticSearchService $elasticSearchService,
+        SimulatedUserService $simulatedUserService
+    ) {
         $this->elasticSearchService = $elasticSearchService;
         $this->queueService = $queueService;
+        $this->simulatedUserService = $simulatedUserService;
     }
 
     /**
@@ -112,15 +124,13 @@ class SearchCrawlerCommandController extends CommandController
      * Crawl queued records
      *
      * @param integer $limit
+     * @param integer $frontendUserId
      * @return boolean
      */
-    public function indexQueueCommand($limit = 50): bool
+    public function indexQueueCommand($limit = 50, $frontendUserId = 0): bool
     {
         $indexed = 0;
-        $client = new Client([
-            'timeout' => self::INDEX_CONNECTION_TIME_OUT,
-            'allow_redirects' => false,
-        ]);
+        $client = $this->getClientAsFrontendUser($frontendUserId);
 
         $this->output->progressStart($limit);
         foreach ($this->queueService->getQueue($limit) as $row) {
@@ -159,11 +169,26 @@ class SearchCrawlerCommandController extends CommandController
      * Add crawled url in current indexation
      *
      * @param string $url
+     * @param int $frontendUserId
      * @return boolean
      */
-    public function indexUrlCommand($url = ''): bool
+    public function indexUrlCommand($url = '', $frontendUserId = 0): bool
     {
-        throw new NotImplementedException('@TODO: ' . __METHOD__, 1542805930588);
+        $client = $this->getClientAsFrontendUser($frontendUserId);
+
+        try {
+            $request = new CrawlerWebRequest(
+                $client,
+                $url
+            );
+            if ($request->shouldIndex()) {
+                $this->elasticSearchService->addDocument($request->getElasticSearchIndex());
+                $this->outputLine('Index successfully added (' . $url . ') to index (' . ConfigurationUtility::index() . ')');
+            }
+        } catch (\Exception $e) {
+            // This should be handled in code!
+            $this->outputLine(date('c') . ':' . get_class($e) . ':' . $e->getCode() . ':' . $e->getMessage());
+        }
         return true;
     }
 
@@ -177,6 +202,32 @@ class SearchCrawlerCommandController extends CommandController
         $this->elasticSearchService->flush();
         $this->outputLine('Index is flushed!');
         return true;
+    }
+
+    /**
+     * @param integer $frontendUserId
+     * @return Client
+     */
+    protected function getClientAsFrontendUser(int $frontendUserId): Client
+    {
+        $headers = [
+            'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0)'
+                . ' AppleWebKit/537.36 (KHTML, like Gecko)'
+                . ' Chrome/48.0.2564.97'
+                . ' Safari/537.36',
+        ];
+        if ($frontendUserId > 0) {
+            $this->simulatedUserService = $this->simulatedUserService ?? new SimulatedUserService;
+            if ($this->simulatedUserService->getSessionId($frontendUserId)) {
+                $headers['Cookie'] = 'fe_typo_user=' . $this->simulatedUserService->getSessionId($frontendUserId);
+            }
+        }
+
+        return new Client([
+            'timeout' => self::INDEX_CONNECTION_TIME_OUT,
+            'allow_redirects' => false,
+            'headers' => $headers
+        ]);
     }
 
     /**
