@@ -136,9 +136,11 @@ class Page implements ElasticSearchIndex
      */
     protected function getSuggestions(): array
     {
-        return [
-            $this->getIndexedTitle()
-        ];
+        if ($this->getMeta() && $this->getMeta()['keywords']) {
+            return GeneralUtility::trimExplode(',', $this->getMeta()['keywords'], true);
+        }
+
+        return [];
     }
 
     /**
