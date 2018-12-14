@@ -5,7 +5,7 @@ namespace Serfhos\MySearchCrawler\Service;
 use TYPO3\CMS\Frontend\Utility\EidUtility;
 
 /**
- * Service: ElasticSearch
+ * Service: Simulated Frontend User Session
  *
  * @package Serfhos\MySearchCrawler\Service
  */

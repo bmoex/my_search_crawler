@@ -57,7 +57,7 @@ class ElasticSearchService
             foreach ($indices['indices'] as $name => $index) {
                 $output[] = [
                         'name' => $name,
-                        'access' => strpos($name, $this->index) === 0
+                        'access' => strpos($name, $this->index) === 0,
                     ] + $index;
             }
         }
@@ -73,7 +73,7 @@ class ElasticSearchService
         $parameters = [
             'index' => $this->index,
             'type' => self::INDEX_TYPE,
-            'body' => $body
+            'body' => $body,
         ];
         return $this->client->search($parameters);
     }
@@ -86,7 +86,7 @@ class ElasticSearchService
     {
         $index = $index ?? $this->index;
         return $this->client->indices()->delete([
-            'index' => $index
+            'index' => $index,
         ]);
     }
 
@@ -106,10 +106,10 @@ class ElasticSearchService
                     ],
                     'mappings' => [
                         self::INDEX_TYPE => [
-                            'properties' => $index->getIndexProperties()
-                        ]
+                            'properties' => $index->getIndexProperties(),
+                        ],
                     ],
-                ]
+                ],
             ]);
         }
         return $this->client->index([
@@ -117,6 +117,19 @@ class ElasticSearchService
             'type' => self::INDEX_TYPE,
             'id' => $index->getIndexIdentifier(),
             'body' => $index->getDocumentBody(),
+        ]);
+    }
+
+    /**
+     * @param string $identifier
+     * @return array
+     */
+    public function removeDocument($identifier): array
+    {
+        return $this->client->delete([
+            'index' => $this->index,
+            'type' => self::INDEX_TYPE,
+            'id' => $identifier,
         ]);
     }
 }

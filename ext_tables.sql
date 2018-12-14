@@ -15,5 +15,5 @@ CREATE TABLE tx_mysearchcrawler_domain_model_queue (
     PRIMARY KEY (uid),
     KEY parent (pid),
     KEY running (running),
-    KEY unique_hash (identifier)
+    UNIQUE unique_hash (identifier)
 );

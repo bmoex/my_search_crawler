@@ -4,14 +4,13 @@ declare(strict_types=1);
 namespace Serfhos\MySearchCrawler\Console\Command;
 
 use GuzzleHttp\Client;
-use Serfhos\MySearchCrawler\Exception\NotImplementedException;
 use Serfhos\MySearchCrawler\Exception\RequestNotFoundException;
 use Serfhos\MySearchCrawler\Request\CrawlerWebRequest;
 use Serfhos\MySearchCrawler\Service\ElasticSearchService;
 use Serfhos\MySearchCrawler\Service\QueueService;
 use Serfhos\MySearchCrawler\Service\SimulatedUserService;
+use Serfhos\MySearchCrawler\Service\UrlService;
 use Serfhos\MySearchCrawler\Utility\ConfigurationUtility;
-use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -42,9 +41,9 @@ class SearchCrawlerCommandController extends CommandController
     protected $simulatedUserService;
 
     /**
-     * @var array
+     * @var UrlService
      */
-    protected $domains = [];
+    protected $urlService;
 
     /**
      * Constructor: CommandController: SearchCrawler
@@ -52,15 +51,18 @@ class SearchCrawlerCommandController extends CommandController
      * @param QueueService $queueService
      * @param ElasticSearchService $elasticSearchService
      * @param SimulatedUserService $simulatedUserService
+     * @param UrlService $urlService
      */
     public function __construct(
         QueueService $queueService,
         ElasticSearchService $elasticSearchService,
-        SimulatedUserService $simulatedUserService
+        SimulatedUserService $simulatedUserService,
+        UrlService $urlService
     ) {
         $this->elasticSearchService = $elasticSearchService;
         $this->queueService = $queueService;
         $this->simulatedUserService = $simulatedUserService;
+        $this->urlService = $urlService;
     }
 
     /**
@@ -92,15 +94,18 @@ class SearchCrawlerCommandController extends CommandController
                     continue;
                 }
 
-                $url = $this->getDomainForRootPageId($row['rootpage_id']) . '/' . ltrim($row['speaking_url'], '/');
+                $url = $this->urlService->generateUrl($row['rootpage_id'], $row['speaking_url']);
+                if ($this->urlService->shouldIndex($url) === false) {
+                    continue;
+                }
 
                 if ($this->queueService->enqueue([
                     'pid' => $row['rootpage_id'],
                     'crdate' => time(),
-                    'cruser_id' => $GLOBALS['BE_USER']->id,
-                    'identifier' => md5($url),
+                    'cruser_id' => $GLOBALS['BE_USER']->id ?? 0,
+                    'identifier' => $this->urlService->getHash($url),
                     'page_url' => $url,
-                    'caller' => json_encode(['table' => 'tx_realurl_urldata', 'uid' => $row['uid'], 'data' => $row])
+                    'caller' => json_encode(['table' => 'tx_realurl_urldata', 'uid' => $row['uid'], 'data' => $row]),
                 ])) {
                     $queued++;
                 }
@@ -226,24 +231,8 @@ class SearchCrawlerCommandController extends CommandController
         return new Client([
             'timeout' => self::INDEX_CONNECTION_TIME_OUT,
             'allow_redirects' => false,
-            'headers' => $headers
+            'headers' => $headers,
         ]);
-    }
-
-    /**
-     * Find domain from core functionality based on root page ID (and store for local processing)
-     *
-     * @param int $rootPage
-     * @return string
-     */
-    protected function getDomainForRootPageId(int $rootPage): ?string
-    {
-        if (!isset($this->domains[$rootPage])) {
-            $protocol = GeneralUtility::getIndpEnv('TYPO3_SSL') ? 'https' : 'http';
-            $domain = BackendUtility::firstDomainRecord(BackendUtility::BEgetRootLine($rootPage));
-            $this->domains[$rootPage] = $protocol . '://' . $domain;
-        }
-        return $this->domains[$rootPage];
     }
 
     /**
