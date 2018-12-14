@@ -68,7 +68,8 @@ class UrlService
     {
         if (!isset($this->domains[$rootPage])) {
             $protocol = GeneralUtility::getIndpEnv('TYPO3_SSL') ? 'https' : 'http';
-            $domain = BackendUtility::firstDomainRecord(BackendUtility::BEgetRootLine($rootPage));
+            $domain = BackendUtility::firstDomainRecord(BackendUtility::BEgetRootLine($rootPage))
+                ?? GeneralUtility::getIndpEnv('TYPO3_HOST_ONLY');
             $this->domains[$rootPage] = $protocol . '://' . $domain;
         }
         return $this->domains[$rootPage];
