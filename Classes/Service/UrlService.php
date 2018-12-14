@@ -74,5 +74,4 @@ class UrlService
         }
         return $this->domains[$rootPage];
     }
-
 }

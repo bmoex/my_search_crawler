@@ -46,6 +46,18 @@ class ConfigurationUtility
     }
 
     /**
+     * @return boolean
+     */
+    public static function verify(): bool
+    {
+        $configuration = static::all();
+        if (isset($configuration['command_crawler_verify_ssl']) && is_string($configuration['command_crawler_verify_ssl'])) {
+            return filter_var($configuration['command_crawler_verify_ssl'], FILTER_VALIDATE_BOOLEAN);
+        }
+        return true;
+    }
+
+    /**
      * Retrieve all configuration for extension
      *
      * @return array

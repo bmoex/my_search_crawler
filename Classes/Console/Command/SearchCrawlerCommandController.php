@@ -232,6 +232,7 @@ class SearchCrawlerCommandController extends CommandController
             'timeout' => self::INDEX_CONNECTION_TIME_OUT,
             'allow_redirects' => false,
             'headers' => $headers,
+            'verify' => ConfigurationUtility::verify()
         ]);
     }
 
