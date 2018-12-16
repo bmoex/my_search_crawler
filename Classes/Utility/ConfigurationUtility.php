@@ -3,6 +3,7 @@
 namespace Serfhos\MySearchCrawler\Utility;
 
 use Serfhos\MySearchCrawler\Exception\InvalidConfigurationException;
+use TYPO3\CMS\Core\Utility\HttpUtility;
 
 /**
  * Utility: Extension Configuration
@@ -61,6 +62,25 @@ class ConfigurationUtility
             }
         }
         return true;
+    }
+
+    /**
+     * @param string $url target url
+     * @return string
+     */
+    public static function crawlUrl(string $url): string
+    {
+        $configuration = static::all();
+        $urlParts = parse_url($url);
+        if (isset($configuration['crawl_domain_override']) && is_array($configuration['crawl_domain_override'])) {
+            $requestHost = $urlParts['scheme'] . '://' . $urlParts['host'];
+            if (isset($configuration['crawl_domain_override'][$requestHost])) {
+                ['scheme' => $urlParts['scheme'], 'host' => $urlParts['host']]
+                    = parse_url($configuration['crawl_domain_override'][$requestHost]);
+            }
+            return HttpUtility::buildUrl($urlParts);
+        }
+        return $url;
     }
 
     /**

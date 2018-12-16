@@ -7,6 +7,7 @@ use GuzzleHttp\Exception\GuzzleException;
 use InvalidArgumentException;
 use Serfhos\MySearchCrawler\Domain\Model\Index\ElasticSearchIndex;
 use Serfhos\MySearchCrawler\Exception\RequestNotFoundException;
+use Serfhos\MySearchCrawler\Utility\ConfigurationUtility;
 use Symfony\Component\DomCrawler\Crawler;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Object\ObjectManager;
@@ -38,7 +39,9 @@ class CrawlerWebRequest
     public function __construct(Client $client, string $uri)
     {
         try {
-            $this->request = $client->get($uri);
+            $this->request = $client->get(
+                ConfigurationUtility::crawlUrl($uri)
+            );
             $this->crawler = new Crawler(
                 (string)$this->request->getBody(),
                 $uri,
