@@ -28,7 +28,8 @@ call_user_func(function ($extension) {
         'Statistics',
         '',
         [
-            'Module\Statistics' => 'overview, flushIndex',
+            'Module\Statistics' => 'overview',
+            'Module\Index' => 'findByQuery, deleteByQuery, deleteDocument, flushIndex',
         ],
         [
             'access' => 'user, group',

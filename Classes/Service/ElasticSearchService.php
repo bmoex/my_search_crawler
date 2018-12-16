@@ -66,12 +66,14 @@ class ElasticSearchService
 
     /**
      * @param array $body
+     * @param string $index
      * @return array
      */
-    public function search($body = []): array
+    public function search($body = [], $index = null): array
     {
+        $index = $index ?? $this->index;
         $parameters = [
-            'index' => $this->index,
+            'index' => $index,
             'type' => self::INDEX_TYPE,
             'body' => $body,
         ];
@@ -91,13 +93,30 @@ class ElasticSearchService
     }
 
     /**
-     * @param ElasticSearchIndex $index
+     * @param array $body
+     * @param string $index
      * @return array
      */
-    public function addDocument(ElasticSearchIndex $index): array
+    public function deleteByQuery(array $body, $index = null): array
     {
-        /** @var Page $index */
-        if (!$this->client->indices()->exists(['index' => $this->index])) {
+        $index = $index ?? $this->index;
+        return $this->client->deleteByQuery([
+            'index' => $index,
+            'type' => self::INDEX_TYPE,
+            'body' => $body,
+        ]);
+    }
+
+    /**
+     * @param ElasticSearchIndex $document
+     * @param string $index
+     * @return array
+     */
+    public function addDocument(ElasticSearchIndex $document, $index = null): array
+    {
+        $index = $index ?? $this->index;
+        /** @var Page $document */
+        if (!$this->client->indices()->exists(['index' => $index])) {
             $this->client->indices()->create([
                 'index' => $this->index,
                 'body' => [
@@ -106,7 +125,7 @@ class ElasticSearchService
                     ],
                     'mappings' => [
                         self::INDEX_TYPE => [
-                            'properties' => $index->getIndexProperties(),
+                            'properties' => $document->getIndexProperties(),
                         ],
                     ],
                 ],
@@ -115,19 +134,20 @@ class ElasticSearchService
         return $this->client->index([
             'index' => $this->index,
             'type' => self::INDEX_TYPE,
-            'id' => $index->getIndexIdentifier(),
-            'body' => $index->getDocumentBody(),
+            'id' => $document->getIndexIdentifier(),
+            'body' => $document->getDocumentBody(),
         ]);
     }
 
     /**
      * @param string $identifier
+     * @param string $index
      * @return array
      */
-    public function removeDocument($identifier): array
+    public function removeDocument($identifier, $index = null): array
     {
         return $this->client->delete([
-            'index' => $this->index,
+            'index' => $index ?? $this->index,
             'type' => self::INDEX_TYPE,
             'id' => $identifier,
         ]);

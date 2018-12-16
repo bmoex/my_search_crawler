@@ -1,0 +1,67 @@
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+      xmlns:core="http://typo3.org/ns/TYPO3/CMS/Core/ViewHelpers"
+      xmlns:ext="http://typo3.org/ns/TYPO3/CMS/Extensionmanager/ViewHelpers" ext:preserve="true"
+      data-namespace-typo3-fluid="true">
+<f:layout name="Backend"/>
+
+<f:section name="Content">
+    <f:form arguments="{index: index}">
+        <div class="form-group">
+            <label for="body">Body</label>
+            <f:form.textarea class="form-control t3editor" value="{body}" rows="10" name="body"/>
+        </div>
+        <div class="form-group">
+            <f:form.button class="btn btn-default">
+                Find documents by body
+            </f:form.button>
+        </div>
+    </f:form>
+
+    <f:if condition="{results}">
+        <table id="my-search-crawler-index-items" class="table table-striped table-hover">
+            <thead>
+            <tr>
+                <th class="col-icon"></th>
+                <th class="col-crawled-title"></th>
+                <th class="col-title col-url">Documents <span class="badge badge-danger">{results.hits.total}</span></th>
+                <th class="col-identifier"></th>
+                <th class="col-control"></th>
+            </tr>
+            </thead>
+            <tbody>
+            <f:for each="{results.hits.hits}" as="document">
+                <tr>
+                    <td class="col-icon"></td>
+                    <td class="col-crawled-title">{document._source.title}</td>
+                    <td class="col-title col-url">{document._source.url}</td>
+                    <td class="col-identifier">{document._id}</td>
+                    <td class="col-control">
+                        <div class="btn-group" role="group">
+                            <a class="btn btn-warning t3js-modal-trigger"
+                               href="{f:uri.action(action: 'deleteDocument', controller: 'Module\Index', arguments: '{index: index, document: document._id, body: body}')}"
+                               data-severity="error"
+                               data-title="{f:translate(key: 'flush_document_title', extensionName: 'MySearchCrawler')}"
+                               data-button-ok-text="{f:translate(key: 'flush_document_confirm', extensionName: 'MySearchCrawler')}"
+                               data-button-close-text="{f:translate(key: 'LLL:EXT:lang/Resources/Private/Language/locallang_common.xlf:cancel')}"
+                               data-content="{f:translate(key: 'flush_document_description', arguments: '{0: document.title, 1: document._id}', extensionName: 'MySearchCrawler')}">
+                                <core:icon identifier="actions-edit-delete"/>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            </f:for>
+            </tbody>
+        </table>
+
+        <f:form method="post" action="deleteByQuery" arguments="{index: index}">
+            <f:form.hidden name="body" value="{body}"/>
+            <div class="form-group">
+                <f:form.button class="btn btn-warning">
+                    Delete all results within given query
+                </f:form.button>
+            </div>
+        </f:form>
+
+    </f:if>
+</f:section>
+</html>

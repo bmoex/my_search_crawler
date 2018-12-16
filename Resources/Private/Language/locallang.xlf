@@ -21,6 +21,27 @@
             <trans-unit id="actions.flush.no_index_flushed">
                 <source>Index "%s" not flushed, error received.</source>
             </trans-unit>
+            <trans-unit id="actions.find_by_query.no_valid_body_given">
+                <source>Can not query index with given body; Retrieved error: %s</source>
+            </trans-unit>
+            <trans-unit id="actions.delete_by_query.no_valid_body_given">
+                <source>Deletion via query is not possible with given body.</source>
+            </trans-unit>
+            <trans-unit id="actions.delete_by_query.successful">
+                <source>Deletion via query is successful!</source>
+            </trans-unit>
+            <trans-unit id="actions.delete_by_query.unsuccessful">
+                <source>Deletion via query is unsuccessful; Retrieved error: %s</source>
+            </trans-unit>
+            <trans-unit id="actions.delete_document.no_document_given">
+                <source>No document id given for deletion</source>
+            </trans-unit>
+            <trans-unit id="actions.delete_document.successful">
+                <source>Document successfully deleted</source>
+            </trans-unit>
+            <trans-unit id="actions.delete_document.unsuccessful">
+                <source>Document cannot be deleted.</source>
+            </trans-unit>
         </body>
     </file>
 </xliff>
