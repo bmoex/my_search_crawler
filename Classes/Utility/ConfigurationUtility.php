@@ -51,8 +51,14 @@ class ConfigurationUtility
     public static function verify(): bool
     {
         $configuration = static::all();
-        if (isset($configuration['command_crawler_verify_ssl']) && is_string($configuration['command_crawler_verify_ssl'])) {
-            return filter_var($configuration['command_crawler_verify_ssl'], FILTER_VALIDATE_BOOLEAN);
+        if (isset($configuration['command_crawler_verify_ssl'])) {
+            if (is_string($configuration['command_crawler_verify_ssl'])) {
+                return filter_var($configuration['command_crawler_verify_ssl'], FILTER_VALIDATE_BOOLEAN);
+            }
+
+            if (is_bool($configuration['command_crawler_verify_ssl'])) {
+                return $configuration['command_crawler_verify_ssl'];
+            }
         }
         return true;
     }

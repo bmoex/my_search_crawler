@@ -69,7 +69,7 @@ class RealUrlQueueEncodedUrlHook implements SingletonInterface
             $this->getQueueService()->enqueue([
                 'pid' => $this->cacheEntry->getRootPageId(),
                 'crdate' => time(),
-                'cruser_id' => $GLOBALS['BE_USER']->id ?? 0,
+                'cruser_id' => $GLOBALS['BE_USER']->user['id'] ?? 0,
                 'identifier' => $this->getUrlService()->getHash($url),
                 'page_url' => $url,
                 'caller' => json_encode(['table' => 'tx_realurl_urldata', 'uid' => $this->cacheEntry->getCacheId()]),

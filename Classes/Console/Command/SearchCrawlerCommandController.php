@@ -102,7 +102,7 @@ class SearchCrawlerCommandController extends CommandController
                 if ($this->queueService->enqueue([
                     'pid' => $row['rootpage_id'],
                     'crdate' => time(),
-                    'cruser_id' => $GLOBALS['BE_USER']->id ?? 0,
+                    'cruser_id' => $GLOBALS['BE_USER']->user['id'] ?? 0,
                     'identifier' => $this->urlService->getHash($url),
                     'page_url' => $url,
                     'caller' => json_encode(['table' => 'tx_realurl_urldata', 'uid' => $row['uid'], 'data' => $row]),
