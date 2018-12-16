@@ -47,8 +47,8 @@
             </tr>
             </thead>
             <tbody>
-            <f:for each="{indices}" as="index" key="identifier">
-                <f:render partial="Backend/Index/ListItem" arguments="{name: identifier, total: index.total.docs.count}"/>
+            <f:for each="{indices}" as="index">
+                <f:render partial="Backend/Index/ListItem" arguments="{index: index}"/>
             </f:for>
             </tbody>
         </table>

@@ -4,17 +4,17 @@
 
 <tr>
     <td class="col-icon"></td>
-    <td class="col-title">{name}</td>
-    <td class="col-total">{total}</td>
+    <td class="col-title">{index.name}</td>
+    <td class="col-total">{index.total.docs.count}</td>
     <td class="col-control">
         <div class="btn-group" role="group">
             <a class="btn btn-warning t3js-modal-trigger"
-               href="{f:uri.action(action: 'flushIndex', arguments: '{index: name}')}"
+               href="{f:uri.action(action: 'flushIndex', arguments: '{index: index.name}')}"
                data-severity="error"
                data-title="{f:translate(key: 'flush_index_title', extensionName: 'MySearchCrawler')}"
                data-button-ok-text="{f:translate(key: 'flush_index_confirm', extensionName: 'MySearchCrawler')}"
                data-button-close-text="{f:translate(key: 'LLL:EXT:lang/Resources/Private/Language/locallang_common.xlf:cancel')}"
-               data-content="{f:translate(key: 'flush_index_description', arguments: '{0: name}', extensionName: 'MySearchCrawler')}"><core:icon
+               data-content="{f:translate(key: 'flush_index_description', arguments: '{0: index.name}', extensionName: 'MySearchCrawler')}"><core:icon
                     identifier="actions-edit-delete"/></a>
         </div>
     </td>
