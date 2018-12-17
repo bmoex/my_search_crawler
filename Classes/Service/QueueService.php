@@ -85,6 +85,7 @@ class QueueService
             $connection->executeUpdate(
                 'UPDATE ' . self::TABLE . ' '
                 . ' SET running = "' . $this->queueId . '" '
+                . ' WHERE running = "" '
                 . ' LIMIT ' . $limit
             );
             $result = $connection->select(
