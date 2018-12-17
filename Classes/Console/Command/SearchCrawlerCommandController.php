@@ -134,6 +134,10 @@ class SearchCrawlerCommandController extends CommandController
      */
     public function indexQueueCommand($limit = 50, $frontendUserId = 0): bool
     {
+        if ($duplicated = $this->queueService->cleanDuplicateQueueEntries()) {
+            $this->outputLine('Total duplicated records removed: ' . $duplicated);
+        }
+
         $indexed = 0;
         $client = $this->getClientAsFrontendUser($frontendUserId);
 
@@ -232,7 +236,7 @@ class SearchCrawlerCommandController extends CommandController
             'timeout' => self::INDEX_CONNECTION_TIME_OUT,
             'allow_redirects' => false,
             'headers' => $headers,
-            'verify' => ConfigurationUtility::verify()
+            'verify' => ConfigurationUtility::verify(),
         ]);
     }
 

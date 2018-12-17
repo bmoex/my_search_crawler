@@ -45,7 +45,6 @@ class IndexController extends ModuleActionController
                     AbstractMessage::ERROR
                 );
             }
-
         }
     }
 
