@@ -29,8 +29,11 @@ class SimulatedUserService
     {
         $this->frontendUserAuthentication->logoff();
         $user = $this->frontendUserAuthentication->getRawUserByUid($frontendUserId);
-        if (!empty($user) && $session = $this->frontendUserAuthentication->createUserSession($user)) {
-            return $session['ses_id'];
+        if (!empty($user)) {
+            // Force disabled IP lock on this created user session
+            $user['disableIPlock'] = true;
+            $session = $this->frontendUserAuthentication->createUserSession($user);
+            return $session['ses_id'] ?? null;
         }
         return null;
     }

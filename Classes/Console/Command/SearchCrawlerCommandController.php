@@ -13,6 +13,7 @@ use Serfhos\MySearchCrawler\Service\UrlService;
 use Serfhos\MySearchCrawler\Utility\ConfigurationUtility;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Utility\ArrayUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Mvc\Controller\CommandController;
 
@@ -193,6 +194,8 @@ class SearchCrawlerCommandController extends CommandController
             if ($request->shouldIndex()) {
                 $this->elasticSearchService->addDocument($request->getElasticSearchIndex());
                 $this->outputLine('Index successfully added (' . $url . ') to index (' . ConfigurationUtility::index() . ')');
+            } else {
+                $this->outputLine('Request (' . $url . ') is defined for skipped indexation.');
             }
         } catch (\Exception $e) {
             // This should be handled in code!
@@ -219,25 +222,21 @@ class SearchCrawlerCommandController extends CommandController
      */
     protected function getClientAsFrontendUser(int $frontendUserId): Client
     {
-        $headers = [
-            'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0)'
-                . ' AppleWebKit/537.36 (KHTML, like Gecko)'
-                . ' Chrome/48.0.2564.97'
-                . ' Safari/537.36',
-        ];
+        $httpOptions = $GLOBALS['TYPO3_CONF_VARS']['HTTP'];
+        ArrayUtility::mergeRecursiveWithOverrule($httpOptions, [
+            'timeout' => self::INDEX_CONNECTION_TIME_OUT,
+            'allow_redirects' => false,
+            'verify' => ConfigurationUtility::verify(),
+        ]);
+
         if ($frontendUserId > 0) {
             $this->simulatedUserService = $this->simulatedUserService ?? new SimulatedUserService;
-            if ($this->simulatedUserService->getSessionId($frontendUserId)) {
-                $headers['Cookie'] = 'fe_typo_user=' . $this->simulatedUserService->getSessionId($frontendUserId);
+            if ($user = $this->simulatedUserService->getSessionId($frontendUserId)) {
+                $httpOptions['headers']['Cookie'] .= 'fe_typo_user=' . $user . ';';
             }
         }
 
-        return new Client([
-            'timeout' => self::INDEX_CONNECTION_TIME_OUT,
-            'allow_redirects' => false,
-            'headers' => $headers,
-            'verify' => ConfigurationUtility::verify(),
-        ]);
+        return new Client($httpOptions);
     }
 
     /**
