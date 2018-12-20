@@ -96,7 +96,7 @@ class Page implements ElasticSearchIndex
         $title = $this->getTitle();
         // Override by og:title
         if ($this->getMeta()) {
-            $title = $this->getMeta()['og:title'] ?? $title;
+            $title = $this->getLastMetaValue('og:title') ?? $title;
         }
         return (string)$title;
     }
@@ -126,7 +126,7 @@ class Page implements ElasticSearchIndex
     {
         $type = 'page';
         if ($this->getMeta()) {
-            $type = $this->getMeta()['type'] ?? $type;
+            $type = $this->getLastMetaValue('type') ?? $type;
         }
         return (string)$type;
     }
@@ -136,11 +136,32 @@ class Page implements ElasticSearchIndex
      */
     protected function getSuggestions(): array
     {
-        if ($this->getMeta() && $this->getMeta()['keywords']) {
-            return GeneralUtility::trimExplode(',', $this->getMeta()['keywords'], true);
+        if ($this->getMeta() && $keywords = $this->getLastMetaValue('keywords')) {
+            return GeneralUtility::trimExplode(',', $keywords, true);
         }
 
         return [];
+    }
+
+    /**
+     * @param string $key
+     * @return mixed
+     */
+    public function getLastMetaValue($key)
+    {
+        $values = $this->meta[$key] ?? [];
+        if (empty($values)) {
+            return null;
+        }
+
+        if (is_array($values)) {
+            return end($values);
+        }
+
+        if (is_string($values)) {
+            return $values;
+        }
+        return null;
     }
 
     /**
