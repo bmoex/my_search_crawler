@@ -21,6 +21,7 @@ class RealUrlQueueDecodedUrlHook implements SingletonInterface
      * @var UrlService
      */
     protected $urlService;
+
     /**
      * @var ElasticSearchService
      */
@@ -30,6 +31,7 @@ class RealUrlQueueDecodedUrlHook implements SingletonInterface
      * @var UrlDecoder
      */
     protected $urlDecoder;
+
     /**
      * @var string
      */

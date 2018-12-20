@@ -20,10 +20,12 @@ class RealUrlQueueEncodedUrlHook implements SingletonInterface
      * @var \DmitryDulepov\Realurl\Cache\UrlCacheEntry
      */
     protected $cacheEntry;
+
     /**
      * @var QueueService
      */
     protected $queueService;
+
     /**
      * @var UrlService
      */
