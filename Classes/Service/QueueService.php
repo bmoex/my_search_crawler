@@ -42,7 +42,7 @@ class QueueService
             return $this->getConnectionForTable(self::TABLE)->executeUpdate(
                 'DELETE `a` FROM ' . self::TABLE . ' AS a, ' . self::TABLE . ' AS b '
                 . ' WHERE a.uid < b.uid '
-                . ' AND a.page_url <=> b.page_url;'
+                . ' AND a.identifier <=> b.identifier;'
             );
         } catch (DBALException $e) {
             return 0;
