@@ -4,6 +4,7 @@ namespace Serfhos\MySearchCrawler\Service;
 
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\Utility\HttpUtility;
 
 /**
  * Service: URL handling
@@ -35,6 +36,7 @@ class UrlService
         if (strpos($url, 'cHash') !== false) {
             return false;
         }
+
         return true;
     }
 
@@ -45,7 +47,19 @@ class UrlService
      */
     public function generateUrl(int $rootPageId, string $speakingUrl): string
     {
-        return $this->getDomainForRootPageId($rootPageId) . '/' . ltrim($speakingUrl, '/');
+        $url = $this->getDomainForRootPageId($rootPageId) . '/' . ltrim($speakingUrl, '/');
+        $urlParts = parse_url($url);
+
+        // Avoid excluded parameters for indexing
+        parse_str($urlParts['query'], $query);
+        if (!empty($query)) {
+            foreach (GeneralUtility::trimExplode(',', $GLOBALS['TYPO3_CONF_VARS']['FE']['cHashExcludedParameters'], true) as $parameter) {
+                unset($query[$parameter]);
+            }
+            $urlParts['query'] = http_build_query($query);
+        }
+
+        return HttpUtility::buildUrl($urlParts);
     }
 
     /**
