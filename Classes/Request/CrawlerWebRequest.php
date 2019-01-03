@@ -192,15 +192,31 @@ class CrawlerWebRequest
     protected function getContent(): string
     {
         $content = '';
+        $elements = [];
         try {
-            $elements = $this->crawler->filter('.content')->filterXPath('//text()[not(ancestor::script)]')->extract('_text');
-            $content = implode('', $elements);
-            $content = strip_tags($content);
-            $content = preg_replace('/[\s]+/mu', ' ', $content);
+            $elements = $this->crawler->filter('.my-search-crawler-content')
+                ->filterXPath('//text()[not(ancestor::script)]')
+                ->extract('_text');
         } catch (InvalidArgumentException $e) {
-            // Never throw exception for lookup
         }
 
-        return trim($content);
+        if (empty($elements)) {
+            try {
+                $elements = $this->crawler->filter('.content')
+                    ->filterXPath('//text()[not(ancestor::script)]')
+                    ->extract('_text');
+            } catch (InvalidArgumentException $e) {
+                // Never throw exception for lookup
+            }
+        }
+
+        if (!empty($elements)) {
+            $content = implode(' ', $elements);
+            $content = strip_tags($content);
+            $content = preg_replace('/[\s]+/mu', ' ', $content);
+            $content = trim($content);
+        }
+
+        return $content;
     }
 }
