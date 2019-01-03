@@ -2,6 +2,7 @@
 
 namespace Serfhos\MySearchCrawler\Service;
 
+use Elasticsearch\Client;
 use Elasticsearch\ClientBuilder;
 use Serfhos\MySearchCrawler\Domain\Model\Index\ElasticSearchIndex;
 use Serfhos\MySearchCrawler\Domain\Model\Index\Page;
@@ -31,10 +32,30 @@ class ElasticSearchService
      */
     public function __construct()
     {
-        $this->index = ConfigurationUtility::index();
-        $this->client = ClientBuilder::create()
+        $this->setIndex(ConfigurationUtility::index());
+        $this->setClient(ClientBuilder::create()
             ->setHosts(ConfigurationUtility::hosts())
-            ->build();
+            ->build());
+    }
+
+    /**
+     * @param string $index
+     * @return $this
+     */
+    public function setIndex(string $index): self
+    {
+        $this->index = $index;
+        return $this;
+    }
+
+    /**
+     * @param \Elasticsearch\Client $client
+     * @return $this
+     */
+    public function setClient($client): self
+    {
+        $this->client = $client;
+        return $this;
     }
 
     /**
