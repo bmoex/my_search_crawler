@@ -212,6 +212,7 @@ class CrawlerWebRequest
 
         if (!empty($elements)) {
             $content = implode(' ', $elements);
+            $content = str_replace('<', ' <', $content);
             $content = strip_tags($content);
             $content = preg_replace('/[\s]+/mu', ' ', $content);
             $content = trim($content);
