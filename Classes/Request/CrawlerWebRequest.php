@@ -47,14 +47,6 @@ class CrawlerWebRequest
                 $uri,
                 (string)$client->getConfig('base_uri')
             );
-
-            // Throw exception when 404 status
-            if ($this->request->getStatusCode() === 404) {
-                throw new RequestNotFoundException(
-                    'Uri (' . $client->getConfig('base_uri') . $uri . ') responded with a Not Found status.',
-                    1542785560414
-                );
-            }
         } catch (GuzzleException $e) {
             // Catch all possible guzzle exceptions..
             throw new RequestNotFoundException(
@@ -87,7 +79,7 @@ class CrawlerWebRequest
         }
 
         try {
-            $robots = $this->crawler->filter('meta[name=robots]')->first()->attr('content');
+            $robots = $this->crawler->filter('meta[name=robots]')->last()->attr('content');
             if ($robots && strpos($robots, 'noindex') !== false) {
                 return false;
             }
@@ -121,7 +113,7 @@ class CrawlerWebRequest
     {
         $url = $this->crawler->getUri();
         try {
-            $canonicalUrl = $this->crawler->filter('meta[property=canonical]')->first()->attr('content');
+            $canonicalUrl = $this->crawler->filter('link[rel=canonical]')->last()->attr('href');
             if ($canonicalUrl) {
                 $url = $canonicalUrl;
             }

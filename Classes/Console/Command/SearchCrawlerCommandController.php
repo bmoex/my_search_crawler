@@ -153,6 +153,8 @@ class SearchCrawlerCommandController extends CommandController
                 if ($request->shouldIndex()) {
                     $this->elasticSearchService->addDocument($request->getElasticSearchIndex());
                     $indexed++;
+                } else {
+                    $this->elasticSearchService->removeDocument($request->getElasticSearchIndex()->getIndexIdentifier());
                 }
 
                 // Dequeue
