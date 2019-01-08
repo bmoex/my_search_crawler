@@ -69,6 +69,17 @@ class CrawlerWebRequest
             return false;
         }
 
+        // Check if link is different than canonical
+        try {
+            $canonicalUrl = $this->crawler->filter('link[rel=canonical]')->last()->attr('href');
+            if ($canonicalUrl !== $this->crawler->getUri()) {
+                return true;
+            }
+        } catch (InvalidArgumentException $e) {
+            // Never throw exception for lookup
+        }
+
+        // Check if robots no index is configured
         if ($this->request->hasHeader('X-Robots-Tag')) {
             $tags = $this->request->getHeader('X-Robots-Tag');
             foreach ($tags as $tag) {
@@ -98,30 +109,12 @@ class CrawlerWebRequest
         /** @var ElasticSearchIndex $index */
         $objectManager = GeneralUtility::makeInstance(ObjectManager::class);
         $index = $objectManager->get(ElasticSearchIndex::class, [
-            'url' => $this->getUrl(),
+            'url' => $this->crawler->getUri(),
             'title' => $this->getTitle(),
             'meta' => $this->getMetaTags(),
             'content' => $this->getContent()
         ]);
         return $index;
-    }
-
-    /**
-     * @return string
-     */
-    protected function getUrl(): string
-    {
-        $url = $this->crawler->getUri();
-        try {
-            $canonicalUrl = $this->crawler->filter('link[rel=canonical]')->last()->attr('href');
-            if ($canonicalUrl) {
-                $url = $canonicalUrl;
-            }
-        } catch (InvalidArgumentException $e) {
-            // Never throw exception for lookup
-        }
-
-        return $url;
     }
 
     /**
