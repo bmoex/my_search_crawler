@@ -7,6 +7,7 @@ use GuzzleHttp\Exception\GuzzleException;
 use InvalidArgumentException;
 use Serfhos\MySearchCrawler\Domain\Model\Index\ElasticSearchIndex;
 use Serfhos\MySearchCrawler\Exception\RequestNotFoundException;
+use Serfhos\MySearchCrawler\Exception\ShouldIndexException;
 use Serfhos\MySearchCrawler\Utility\ConfigurationUtility;
 use Symfony\Component\DomCrawler\Crawler;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -57,23 +58,36 @@ class CrawlerWebRequest
     }
 
     /**
+     * @throws \Serfhos\MySearchCrawler\Exception\ShouldIndexException
      * @return bool
      */
     public function shouldIndex(): bool
     {
         if (!$this->request || !$this->crawler) {
-            return false;
+            ShouldIndexException::throw(
+                'No request or crawler defined',
+                ['request' => $this->request, 'crawler' => $this->crawler],
+                1547025004140
+            );
         }
 
         if ($this->request->getStatusCode() !== 200) {
-            return false;
+            ShouldIndexException::throw(
+                'No `Found` (200) status response retrieved',
+                ['statusCode' => $this->request->getStatusCode()],
+                1547025092838
+            );
         }
 
         // Check if link is different than canonical
         try {
             $canonicalUrl = $this->crawler->filter('link[rel=canonical]')->last()->attr('href');
             if ($canonicalUrl !== $this->crawler->getUri()) {
-                return true;
+                ShouldIndexException::throw(
+                    'Canonical link differs from requested url',
+                    ['canonical' => $canonicalUrl, 'requested' => $this->crawler->getUri()],
+                    1547025139698
+                );
             }
         } catch (InvalidArgumentException $e) {
             // Never throw exception for lookup
@@ -84,7 +98,11 @@ class CrawlerWebRequest
             $tags = $this->request->getHeader('X-Robots-Tag');
             foreach ($tags as $tag) {
                 if (strpos($tag, 'noindex') !== false) {
-                    return false;
+                    ShouldIndexException::throw(
+                        'X-Robots-Tag header retrieved with no index',
+                        ['robots' => $tags],
+                        1547025168687
+                    );
                 }
             }
         }
@@ -92,7 +110,11 @@ class CrawlerWebRequest
         try {
             $robots = $this->crawler->filter('meta[name=robots]')->last()->attr('content');
             if ($robots && strpos($robots, 'noindex') !== false) {
-                return false;
+                ShouldIndexException::throw(
+                    '<meta> robots tag configured with no index',
+                    ['robots' => $robots],
+                    1547025221601
+                );
             }
         } catch (InvalidArgumentException $e) {
             // Never throw exception for lookup
@@ -112,7 +134,7 @@ class CrawlerWebRequest
             'url' => $this->crawler->getUri(),
             'title' => $this->getTitle(),
             'meta' => $this->getMetaTags(),
-            'content' => $this->getContent()
+            'content' => $this->getContent(),
         ]);
         return $index;
     }
@@ -142,7 +164,7 @@ class CrawlerWebRequest
                         } else {
                             $metaTags[$name] = [
                                 $metaTags[$name],
-                                $content
+                                $content,
                             ];
                         }
                     } else {

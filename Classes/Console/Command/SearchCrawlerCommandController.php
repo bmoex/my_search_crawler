@@ -3,8 +3,9 @@ declare(strict_types=1);
 
 namespace Serfhos\MySearchCrawler\Console\Command;
 
+use Elasticsearch\Common\Exceptions\ElasticsearchException;
 use GuzzleHttp\Client;
-use Serfhos\MySearchCrawler\Exception\RequestNotFoundException;
+use Serfhos\MySearchCrawler\Exception\ShouldIndexException;
 use Serfhos\MySearchCrawler\Request\CrawlerWebRequest;
 use Serfhos\MySearchCrawler\Service\ElasticSearchService;
 use Serfhos\MySearchCrawler\Service\QueueService;
@@ -150,22 +151,16 @@ class SearchCrawlerCommandController extends CommandController
                     $row['page_url']
                 );
 
-                if ($request->shouldIndex()) {
-                    $this->elasticSearchService->addDocument($request->getElasticSearchIndex());
+                if ($this->index($request)) {
                     $indexed++;
-                } else {
-                    $this->elasticSearchService->removeDocument($request->getElasticSearchIndex()->getIndexIdentifier());
                 }
-
-                // Dequeue
-                $this->queueService->dequeue((int)$row['uid']);
-            } catch (RequestNotFoundException $e) {
-                // Dequeue
-                $this->queueService->dequeue((int)$row['uid']);
             } catch (\Exception $e) {
                 // This should be handled in code!
                 $this->outputLine(date('c') . ':' . get_class($e) . ':' . $e->getCode() . ':' . $e->getMessage());
             }
+
+            // Always dequeue when handled, even if exception is thrown
+            $this->queueService->dequeue((int)$row['uid']);
 
             $this->output->progressAdvance();
         }
@@ -193,11 +188,9 @@ class SearchCrawlerCommandController extends CommandController
                 $client,
                 $url
             );
-            if ($request->shouldIndex()) {
-                $this->elasticSearchService->addDocument($request->getElasticSearchIndex());
+
+            if ($this->index($request, true)) {
                 $this->outputLine('Index successfully added (' . $url . ') to index (' . ConfigurationUtility::index() . ')');
-            } else {
-                $this->outputLine('Request (' . $url . ') is defined for skipped indexation.');
             }
         } catch (\Exception $e) {
             // This should be handled in code!
@@ -248,5 +241,34 @@ class SearchCrawlerCommandController extends CommandController
     public function getConnectionForTable(string $tableName): Connection
     {
         return GeneralUtility::makeInstance(ConnectionPool::class)->getConnectionForTable($tableName);
+    }
+
+    /**
+     * @param \Serfhos\MySearchCrawler\Request\CrawlerWebRequest $request
+     * @param bool $throw
+     * @return boolean
+     * @throws \Serfhos\MySearchCrawler\Exception\ShouldIndexException if $throw is configured
+     */
+    protected function index(CrawlerWebRequest $request, $throw = false): bool
+    {
+        $index = $request->getElasticSearchIndex();
+        try {
+            if ($request->shouldIndex()) {
+                $this->elasticSearchService->addDocument($index);
+            }
+            return true;
+        } catch (ShouldIndexException $e) {
+            // Always try to delete document!
+            try {
+                $this->elasticSearchService->removeDocument($index->getIndexIdentifier());
+            } catch (ElasticsearchException $_e) {
+                // Do nothing..
+            }
+
+            if ($throw) {
+                throw $e;
+            }
+        }
+        return false;
     }
 }
