@@ -49,6 +49,14 @@ class ElasticSearchService
     }
 
     /**
+     * @return string
+     */
+    public function getIndex(): string
+    {
+        return $this->index;
+    }
+
+    /**
      * @param \Elasticsearch\Client $client
      * @return $this
      */
@@ -56,6 +64,14 @@ class ElasticSearchService
     {
         $this->client = $client;
         return $this;
+    }
+
+    /**
+     * @return Client
+     */
+    public function getClient()
+    {
+        return $this->client;
     }
 
     /**
