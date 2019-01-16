@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Serfhos\MySearchCrawler\Console\Command;
 
+use DateTime;
 use Elasticsearch\Common\Exceptions\ElasticsearchException;
 use GuzzleHttp\Client;
 use Serfhos\MySearchCrawler\Exception\ShouldIndexException;
@@ -120,7 +121,65 @@ class SearchCrawlerCommandController extends CommandController
         $this->output->progressFinish();
 
         $duplicated = $this->queueService->cleanDuplicateQueueEntries();
-        $this->outputLine('');
+        $this->outputLine();
+        $this->outputLine('Total queued records: ' . $queued);
+        $this->outputLine('Total duplicated records removed: ' . $duplicated);
+
+        return true;
+    }
+
+    /**
+     * @param string $indexedSince
+     * @return boolean
+     */
+    public function requeueIndexedDocumentsCommand(string $indexedSince = null): bool
+    {
+        if ($indexedSince === null) {
+            $indexedSince = 'now-1d/d';
+        } else {
+            $indexedSince = (new DateTime('@' . strtotime($indexedSince)))->format(DateTime::ATOM);
+        }
+
+        $queued = 0;
+        $page = 0;
+        $size = 50;
+
+        $query = [
+            'range' => [
+                'indexed' => [
+                    'lte' => $indexedSince
+                ]
+            ],
+        ];
+        $this->output->progressStart((int)$this->elasticSearchService->count(['query' => $query])['count']);
+        while ($page !== null) {
+            $results = $this->elasticSearchService->search([
+                'from' => $page * $size,
+                'size' => $size,
+                'query' => $query,
+            ]);
+            if (isset($results['hits']['hits']) && !empty($results['hits']['hits'])) {
+                foreach ($results['hits']['hits'] as $hit) {
+                    if ($this->queueService->enqueue([
+                        'pid' => 0,
+                        'crdate' => time(),
+                        'cruser_id' => $GLOBALS['BE_USER']->user['id'] ?? 0,
+                        'identifier' => $hit['_id'],
+                        'page_url' => $hit['_source']['url'],
+                        'caller' => json_encode(['index' => $this->elasticSearchService->getIndex(), 'source' => $hit['_source']]),
+                    ])) {
+                        $queued++;
+                    }
+                }
+                $page++;
+            } else {
+                $page = null;
+            }
+        }
+        $this->output->progressFinish();
+
+        $duplicated = $this->queueService->cleanDuplicateQueueEntries();
+        $this->outputLine();
         $this->outputLine('Total queued records: ' . $queued);
         $this->outputLine('Total duplicated records removed: ' . $duplicated);
 

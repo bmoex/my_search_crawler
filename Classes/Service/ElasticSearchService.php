@@ -106,6 +106,22 @@ class ElasticSearchService
      * @param string $index
      * @return array
      */
+    public function count($body = [], $index = null): array
+    {
+        $index = $index ?? $this->index;
+        $parameters = [
+            'index' => $index,
+            'type' => self::INDEX_TYPE,
+            'body' => $body,
+        ];
+        return $this->client->count($parameters);
+    }
+
+    /**
+     * @param array $body
+     * @param string $index
+     * @return array
+     */
     public function search($body = [], $index = null): array
     {
         $index = $index ?? $this->index;
