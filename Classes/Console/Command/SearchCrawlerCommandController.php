@@ -147,8 +147,8 @@ class SearchCrawlerCommandController extends CommandController
         $query = [
             'range' => [
                 'indexed' => [
-                    'lte' => $indexedSince
-                ]
+                    'lte' => $indexedSince,
+                ],
             ],
         ];
         $this->output->progressStart((int)$this->elasticSearchService->count(['query' => $query])['count']);
@@ -160,15 +160,19 @@ class SearchCrawlerCommandController extends CommandController
             ]);
             if (isset($results['hits']['hits']) && !empty($results['hits']['hits'])) {
                 foreach ($results['hits']['hits'] as $hit) {
-                    if ($this->queueService->enqueue([
-                        'pid' => 0,
-                        'crdate' => time(),
-                        'cruser_id' => $GLOBALS['BE_USER']->user['id'] ?? 0,
-                        'identifier' => $hit['_id'],
-                        'page_url' => $hit['_source']['url'],
-                        'caller' => json_encode(['index' => $this->elasticSearchService->getIndex(), 'source' => $hit['_source']]),
-                    ])) {
-                        $queued++;
+                    try {
+                        if ($this->queueService->enqueue([
+                            'pid' => 0,
+                            'crdate' => time(),
+                            'cruser_id' => $GLOBALS['BE_USER']->user['id'] ?? 0,
+                            'identifier' => $hit['_id'],
+                            'page_url' => $hit['_source']['url'],
+                            'caller' => json_encode(['index' => $this->elasticSearchService->getIndex(), 'source' => $hit['_source']]),
+                        ])) {
+                            $queued++;
+                        }
+                    } catch (\Exception $e) {
+                        // If database error, do not break loop..
                     }
                 }
                 $page++;
