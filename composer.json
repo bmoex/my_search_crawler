@@ -16,16 +16,15 @@
     "homepage": "https://github.com/bmoex/my_search_crawler",
     "license": "LGPL-3.0+",
     "require": {
-        "typo3/cms-core": ">=8.7.0 <9.0.0",
-        "typo3/cms-frontend": ">8.7.0 <9.0.0",
-        "typo3/cms-scheduler": ">=8.7.0 <9.0.0",
+        "typo3/cms-core": ">=8.7.0",
+        "typo3/cms-frontend": ">8.7.0",
+        "typo3/cms-scheduler": ">=8.7.0",
         "elasticsearch/elasticsearch": "^6.0",
-        "symfony/dom-crawler": "^3.4",
-        "symfony/css-selector": "^3.4"
+        "symfony/dom-crawler": "^4.3",
+        "symfony/css-selector": "^4.3"
     },
 
     "replace": {
-        "my_search_crawler": "self.version",
         "typo3-ter/my-search-crawler": "self.version"
     },
 
