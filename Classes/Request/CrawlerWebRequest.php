@@ -15,27 +15,21 @@ use TYPO3\CMS\Extbase\Object\ObjectManager;
 
 /**
  * WebRequest: Crawler
- *
- * @package Serfhos\MySearchCrawler\Request
  */
 class CrawlerWebRequest
 {
 
-    /**
-     * @var \Psr\Http\Message\ResponseInterface
-     */
+    /** @var \Psr\Http\Message\ResponseInterface */
     public $request;
 
-    /**
-     * @var Crawler
-     */
+    /** @var \Symfony\Component\DomCrawler\Crawler */
     protected $crawler;
 
     /**
      * Constructor: CrawlerWebRequest
      *
-     * @param Client $client
-     * @param string $uri
+     * @param  \GuzzleHttp\Client  $client
+     * @param  string  $uri
      */
     public function __construct(Client $client, string $uri)
     {
@@ -58,8 +52,8 @@ class CrawlerWebRequest
     }
 
     /**
-     * @throws \Serfhos\MySearchCrawler\Exception\ShouldIndexException
      * @return bool
+     * @throws \Serfhos\MySearchCrawler\Exception\ShouldIndexException
      */
     public function shouldIndex(): bool
     {
@@ -81,12 +75,25 @@ class CrawlerWebRequest
 
         // Check if link is different than canonical
         try {
+            $crawledUrl = $this->crawler->getUri();
             $canonicalUrl = $this->crawler->filter('link[rel=canonical]')->last()->attr('href');
-            if ($canonicalUrl !== $this->crawler->getUri()) {
+            if ($canonicalUrl !== $crawledUrl && GeneralUtility::isValidUrl($canonicalUrl)) {
                 ShouldIndexException::throw(
                     'Canonical link differs from requested url',
                     ['canonical' => $canonicalUrl, 'requested' => $this->crawler->getUri()],
                     1547025139698
+                );
+            }
+            $relativeCrawledUrl = preg_replace('#^(://|[^/?])+#', '', $crawledUrl);
+            if ($canonicalUrl !== $relativeCrawledUrl) {
+                ShouldIndexException::throw(
+                    'Canonical link differs from requested relative url',
+                    [
+                        'canonical' => $canonicalUrl,
+                        'requested' => $this->crawler->getUri(),
+                        'relative' => $relativeCrawledUrl,
+                    ],
+                    1574266503139
                 );
             }
         } catch (InvalidArgumentException $e) {
@@ -124,11 +131,11 @@ class CrawlerWebRequest
     }
 
     /**
-     * @return ElasticSearchIndex
+     * @return \Serfhos\MySearchCrawler\Domain\Model\Index\ElasticSearchIndex
      */
     public function getElasticSearchIndex(): ElasticSearchIndex
     {
-        /** @var ElasticSearchIndex $index */
+        /** @var \Serfhos\MySearchCrawler\Domain\Model\Index\ElasticSearchIndex $index */
         $objectManager = GeneralUtility::makeInstance(ObjectManager::class);
         $index = $objectManager->get(ElasticSearchIndex::class, [
             'url' => $this->crawler->getUri(),
@@ -136,6 +143,7 @@ class CrawlerWebRequest
             'meta' => $this->getMetaTags(),
             'content' => $this->getContent(),
         ]);
+
         return $index;
     }
 
@@ -175,6 +183,7 @@ class CrawlerWebRequest
         } catch (InvalidArgumentException $e) {
             // Never throw exception for lookup
         }
+
         return $metaTags;
     }
 

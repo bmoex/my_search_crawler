@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Serfhos\MySearchCrawler\Console\Command;
@@ -22,39 +23,32 @@ use TYPO3\CMS\Extbase\Mvc\Controller\CommandController;
 /**
  * CommandController: SearchCrawler
  *
- * @package Serfhos\MySearchCrawler\Console\Command
+ * @deprecated
+ * @phpcs:ignoreFile
  */
 class SearchCrawlerCommandController extends CommandController
 {
     protected const INDEX_CONNECTION_TIME_OUT = 15.0;
 
-    /**
-     * @var ElasticSearchService
-     */
+    /** @var \Serfhos\MySearchCrawler\Service\ElasticSearchService */
     protected $elasticSearchService;
 
-    /**
-     * @var QueueService
-     */
+    /** @var \Serfhos\MySearchCrawler\Service\QueueService */
     protected $queueService;
 
-    /**
-     * @var SimulatedUserService
-     */
+    /** @var \Serfhos\MySearchCrawler\Service\SimulatedUserService */
     protected $simulatedUserService;
 
-    /**
-     * @var UrlService
-     */
+    /** @var \Serfhos\MySearchCrawler\Service\UrlService */
     protected $urlService;
 
     /**
      * Constructor: CommandController: SearchCrawler
      *
-     * @param QueueService $queueService
-     * @param ElasticSearchService $elasticSearchService
-     * @param SimulatedUserService $simulatedUserService
-     * @param UrlService $urlService
+     * @param  \Serfhos\MySearchCrawler\Service\QueueService  $queueService
+     * @param  \Serfhos\MySearchCrawler\Service\ElasticSearchService  $elasticSearchService
+     * @param  \Serfhos\MySearchCrawler\Service\SimulatedUserService  $simulatedUserService
+     * @param  \Serfhos\MySearchCrawler\Service\UrlService  $urlService
      */
     public function __construct(
         QueueService $queueService,
@@ -102,14 +96,16 @@ class SearchCrawlerCommandController extends CommandController
                     continue;
                 }
 
-                if ($this->queueService->enqueue([
+                if (
+                $this->queueService->enqueue([
                     'pid' => $row['rootpage_id'],
                     'crdate' => time(),
                     'cruser_id' => $GLOBALS['BE_USER']->user['id'] ?? 0,
                     'identifier' => $this->urlService->getHash($url),
                     'page_url' => $url,
                     'caller' => json_encode(['table' => 'tx_realurl_urldata', 'uid' => $row['uid'], 'data' => $row]),
-                ])) {
+                ])
+                ) {
                     $queued++;
                 }
             } catch (\Exception $e) {
@@ -129,10 +125,10 @@ class SearchCrawlerCommandController extends CommandController
     }
 
     /**
-     * @param string $indexedSince
+     * @param  string  $indexedSince
      * @return boolean
      */
-    public function requeueIndexedDocumentsCommand(string $indexedSince = null): bool
+    public function requeueIndexedDocumentsCommand(?string $indexedSince = null): bool
     {
         if ($indexedSince === null) {
             $indexedSince = 'now-1d/d';
@@ -161,14 +157,19 @@ class SearchCrawlerCommandController extends CommandController
             if (isset($results['hits']['hits']) && !empty($results['hits']['hits'])) {
                 foreach ($results['hits']['hits'] as $hit) {
                     try {
-                        if ($this->queueService->enqueue([
+                        if (
+                        $this->queueService->enqueue([
                             'pid' => 0,
                             'crdate' => time(),
                             'cruser_id' => $GLOBALS['BE_USER']->user['id'] ?? 0,
                             'identifier' => $hit['_id'],
                             'page_url' => $hit['_source']['url'],
-                            'caller' => json_encode(['index' => $this->elasticSearchService->getIndex(), 'source' => $hit['_source']]),
-                        ])) {
+                            'caller' => json_encode([
+                                'index' => $this->elasticSearchService->getIndex(),
+                                'source' => $hit['_source'],
+                            ]),
+                        ])
+                        ) {
                             $queued++;
                         }
                     } catch (\Exception $e) {
@@ -193,8 +194,8 @@ class SearchCrawlerCommandController extends CommandController
     /**
      * Crawl queued records
      *
-     * @param integer $limit
-     * @param integer $frontendUserId
+     * @param  integer  $limit
+     * @param  integer  $frontendUserId
      * @return boolean
      */
     public function indexQueueCommand($limit = 50, $frontendUserId = 0): bool
@@ -238,8 +239,8 @@ class SearchCrawlerCommandController extends CommandController
     /**
      * Add crawled url in current indexation
      *
-     * @param string $url
-     * @param int $frontendUserId
+     * @param  string  $url
+     * @param  int  $frontendUserId
      * @return boolean
      */
     public function indexUrlCommand($url = '', $frontendUserId = 0): bool
@@ -259,6 +260,7 @@ class SearchCrawlerCommandController extends CommandController
             // This should be handled in code!
             $this->outputLine(date('c') . ':' . get_class($e) . ':' . $e->getCode() . ':' . $e->getMessage());
         }
+
         return true;
     }
 
@@ -271,12 +273,13 @@ class SearchCrawlerCommandController extends CommandController
     {
         $this->elasticSearchService->flush();
         $this->outputLine('Index is flushed!');
+
         return true;
     }
 
     /**
-     * @param integer $frontendUserId
-     * @return Client
+     * @param  integer  $frontendUserId
+     * @return \GuzzleHttp\Client
      */
     protected function getClientAsFrontendUser(int $frontendUserId): Client
     {
@@ -288,7 +291,7 @@ class SearchCrawlerCommandController extends CommandController
         ]);
 
         if ($frontendUserId > 0) {
-            $this->simulatedUserService = $this->simulatedUserService ?? new SimulatedUserService;
+            $this->simulatedUserService = $this->simulatedUserService ?? new SimulatedUserService();
             if ($user = $this->simulatedUserService->getSessionId($frontendUserId)) {
                 $httpOptions['headers']['Cookie'] .= 'fe_typo_user=' . $user . ';';
             }
@@ -298,8 +301,8 @@ class SearchCrawlerCommandController extends CommandController
     }
 
     /**
-     * @param string $tableName
-     * @return Connection
+     * @param  string  $tableName
+     * @return \TYPO3\CMS\Core\Database\Connection
      */
     public function getConnectionForTable(string $tableName): Connection
     {
@@ -307,8 +310,8 @@ class SearchCrawlerCommandController extends CommandController
     }
 
     /**
-     * @param \Serfhos\MySearchCrawler\Request\CrawlerWebRequest $request
-     * @param bool $throw
+     * @param  \Serfhos\MySearchCrawler\Request\CrawlerWebRequest  $request
+     * @param  bool  $throw
      * @return boolean
      * @throws \Serfhos\MySearchCrawler\Exception\ShouldIndexException if $throw is configured
      */
@@ -319,6 +322,7 @@ class SearchCrawlerCommandController extends CommandController
             if ($request->shouldIndex()) {
                 $this->elasticSearchService->addDocument($index);
             }
+
             return true;
         } catch (ShouldIndexException $e) {
             // Always try to delete document!
@@ -332,6 +336,7 @@ class SearchCrawlerCommandController extends CommandController
                 throw $e;
             }
         }
+
         return false;
     }
 }

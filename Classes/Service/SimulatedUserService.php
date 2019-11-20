@@ -6,11 +6,10 @@ use TYPO3\CMS\Frontend\Utility\EidUtility;
 
 /**
  * Service: Simulated Frontend User Session
- *
- * @package Serfhos\MySearchCrawler\Service
  */
 class SimulatedUserService
 {
+    /** @var \TYPO3\CMS\Frontend\Authentication\FrontendUserAuthentication */
     protected $frontendUserAuthentication;
 
     /**
@@ -18,11 +17,12 @@ class SimulatedUserService
      */
     public function __construct()
     {
+        // @TODO check if this is ok, for now?
         $this->frontendUserAuthentication = EidUtility::initFeUser();
     }
 
     /**
-     * @param integer $frontendUserId
+     * @param  integer  $frontendUserId
      * @return string
      */
     public function getSessionId(int $frontendUserId): ?string
@@ -33,8 +33,10 @@ class SimulatedUserService
             // Force disabled IP lock on this created user session
             $user['disableIPlock'] = true;
             $session = $this->frontendUserAuthentication->createUserSession($user);
+
             return $session['ses_id'] ?? null;
         }
+
         return null;
     }
 

@@ -1,5 +1,5 @@
 <?php
-call_user_func(function ($extension) {
+call_user_func(function ($extension): void {
     $GLOBALS['TYPO3_CONF_VARS']['FE']['eID_include'][$extension . '_autocomplete'] = \Serfhos\MySearchCrawler\Controller\SearchAPIController::class . '::autocomplete';
     $GLOBALS['TYPO3_CONF_VARS']['FE']['eID_include'][$extension . '_search'] = \Serfhos\MySearchCrawler\Controller\SearchAPIController::class . '::search';
 
@@ -11,8 +11,10 @@ call_user_func(function ($extension) {
 
     $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase']['commandControllers'][$extension] = \Serfhos\MySearchCrawler\Console\Command\SearchCrawlerCommandController::class;
 
-    $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['realurl']['decodeSpURL_preProc'][$extension] = \Serfhos\MySearchCrawler\Hook\RealUrlQueueDecodedUrlHook::class . '->storeUrlDecoder';
-    $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_fe.php']['hook_eofe'][$extension] = \Serfhos\MySearchCrawler\Hook\RealUrlQueueDecodedUrlHook::class . '->validateIndex';
-    $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['realurl']['storeInUrlCache'][$extension] = \Serfhos\MySearchCrawler\Hook\RealUrlQueueEncodedUrlHook::class . '->storeInUrlCache';
-    $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['realurl']['encodeSpURL_postProc'][$extension] = \Serfhos\MySearchCrawler\Hook\RealUrlQueueEncodedUrlHook::class . '->queueCacheEntry';
-}, \Serfhos\MySearchCrawler\Utility\ConfigurationUtility::EXTENSION);
+    // DataHandlerHook for saving/editing pages
+    $GLOBALS ['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['processDatamapClass'][$extension] = \Serfhos\MySearchCrawler\Hook\DataHandlerHook::class;
+    $GLOBALS ['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['processCmdmapClass'][$extension] = \Serfhos\MySearchCrawler\Hook\DataHandlerHook::class;
+
+    // Check if indexation should be done
+    $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_fe.php']['hook_eofe'][$extension] = \Serfhos\MySearchCrawler\Hook\UrlIndexationHook::class . '->validate';
+}, 'my_search_crawler');

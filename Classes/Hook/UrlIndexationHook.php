@@ -2,7 +2,6 @@
 
 namespace Serfhos\MySearchCrawler\Hook;
 
-use DmitryDulepov\Realurl\Decoder\UrlDecoder;
 use Serfhos\MySearchCrawler\Service\ElasticSearchService;
 use Serfhos\MySearchCrawler\Service\UrlService;
 use TYPO3\CMS\Core\SingletonInterface;
@@ -10,56 +9,23 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Object\ObjectManager;
 use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
 
-/**
- * Class RealUrlQueueHook
- *
- * @package Serfhos\MySearchCrawler\Hook
- */
-class RealUrlQueueDecodedUrlHook implements SingletonInterface
+class UrlIndexationHook implements SingletonInterface
 {
-    /**
-     * @var UrlService
-     */
+    /** @var \Serfhos\MySearchCrawler\Service\UrlService */
     protected $urlService;
 
-    /**
-     * @var ElasticSearchService
-     */
+    /** @var \Serfhos\MySearchCrawler\Service\ElasticSearchService */
     protected $elasticSearchService;
 
     /**
-     * @var UrlDecoder
+     * @param  array  $parameters
+     * @param  TypoScriptFrontendController  $reference
+     * @see \TYPO3\CMS\Frontend\Http\RequestHandler::handle via
+     *     $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_fe.php']['hook_eofe']
      */
-    protected $urlDecoder;
-
-    /**
-     * @var string
-     */
-    protected $url;
-
-    /**
-     * Hook from $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['realurl']['decodeSpURL_preProc']
-     *
-     * @param array $parameters
-     * @param \DmitryDulepov\Realurl\Decoder\UrlDecoder $urlDecoder
-     */
-    public function storeUrlDecoder(array $parameters, UrlDecoder $urlDecoder): void
+    public function validate(array $parameters, TypoScriptFrontendController $reference): void
     {
-        $this->urlDecoder = $urlDecoder;
-        $this->url = $this->url ?? $parameters['URL'];
-    }
-
-    /**
-     * @param array $parameters
-     * @param \TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController $typoscriptFrontendController
-     */
-    public function validateIndex(array $parameters, TypoScriptFrontendController $typoscriptFrontendController): void
-    {
-        if (!$this->urlDecoder && empty($this->url) && $typoscriptFrontendController->no_cache === false) {
-            return;
-        }
-
-        return; // @TODO remove index + realurl data record to keep this clean!
+        return; // @TODO add to queue
         $url = GeneralUtility::getIndpEnv('TYPO3_REQUEST_URL');
     }
 
@@ -72,6 +38,7 @@ class RealUrlQueueDecodedUrlHook implements SingletonInterface
             $objectManager = GeneralUtility::makeInstance(ObjectManager::class);
             $this->urlService = $objectManager->get(UrlService::class);
         }
+
         return $this->urlService;
     }
 
@@ -84,6 +51,7 @@ class RealUrlQueueDecodedUrlHook implements SingletonInterface
             $objectManager = GeneralUtility::makeInstance(ObjectManager::class);
             $this->elasticSearchService = $objectManager->get(ElasticSearchService::class);
         }
+
         return $this->elasticSearchService;
     }
 }

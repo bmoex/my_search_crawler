@@ -1,5 +1,5 @@
 <?php
-call_user_func(function ($extension) {
+call_user_func(function ($extension): void {
     // Register main module icon
     $iconRegistry = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\TYPO3\CMS\Core\Imaging\IconRegistry::class);
     $iconRegistry->registerIcon(
@@ -18,7 +18,7 @@ call_user_func(function ($extension) {
         [
             'labels' => 'LLL:EXT:' . $extension . '/Resources/Private/Language/Backend/Module.xlf',
             'name' => $extension,
-            'iconIdentifier' => 'module-' . $extension
+            'iconIdentifier' => 'module-' . $extension,
         ]
     );
 

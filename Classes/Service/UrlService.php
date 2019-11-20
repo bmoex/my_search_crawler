@@ -8,14 +8,10 @@ use TYPO3\CMS\Core\Utility\HttpUtility;
 
 /**
  * Service: URL handling
- *
- * @package Serfhos\MySearchCrawler\Service
  */
 class UrlService
 {
-    /**
-     * @var array
-     */
+    /** @var array */
     protected $domains = [];
 
     /**

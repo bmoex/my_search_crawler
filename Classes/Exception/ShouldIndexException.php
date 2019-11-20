@@ -4,15 +4,11 @@ namespace Serfhos\MySearchCrawler\Exception;
 
 /**
  * Exception: Throws by lookup of shouldIndex()
- *
- * @package Serfhos\MySearchCrawler\Exception
  */
 class ShouldIndexException extends \LogicException implements ExtensionException
 {
-    /**
-     * @var array
-     */
-    protected $context;
+    /** @var array */
+    public $context;
 
     /**
      * @param string $message

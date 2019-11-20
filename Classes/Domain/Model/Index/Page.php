@@ -7,8 +7,6 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * Generic Index: Page object
- *
- * @package Serfhos\MySearchCrawler\Domain\Model\Index
  */
 class Page implements ElasticSearchIndex
 {
@@ -27,33 +25,23 @@ class Page implements ElasticSearchIndex
         }
     }
 
-    /**
-     * @var DateTime
-     */
+    /** @var \DateTime */
     protected $indexed;
 
-    /**
-     * @var string
-     */
+    /** @var string */
     protected $url = '';
 
-    /**
-     * @var string
-     */
+    /** @var string */
     protected $title = '';
 
-    /**
-     * @var array
-     */
+    /** @var array */
     protected $meta = [];
 
-    /**
-     * @var string
-     */
+    /** @var string */
     protected $content = '';
 
     /**
-     * @return DateTime
+     * @return \DateTime
      */
     public function getIndexed(): DateTime
     {
@@ -61,7 +49,7 @@ class Page implements ElasticSearchIndex
     }
 
     /**
-     * @param DateTime $indexed
+     * @param \DateTime $indexed
      * @return $this
      */
     public function setIndexed(DateTime $indexed): self

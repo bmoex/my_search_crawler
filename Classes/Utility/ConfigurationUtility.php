@@ -7,23 +7,19 @@ use TYPO3\CMS\Core\Utility\HttpUtility;
 
 /**
  * Utility: Extension Configuration
- *
- * @package Serfhos\MySearchCrawler\Utility
  */
 class ConfigurationUtility
 {
     public const EXTENSION = 'my_search_crawler';
 
-    /**
-     * @var array
-     */
+    /** @var array */
     public static $configuration;
 
     /**
      * Retrieve hosts in configuration
      *
      * @return array
-     * @throws InvalidConfigurationException
+     * @throws \Serfhos\MySearchCrawler\Exception\InvalidConfigurationException
      */
     public static function hosts(): array
     {
@@ -87,7 +83,7 @@ class ConfigurationUtility
      * Retrieve all configuration for extension
      *
      * @return array
-     * @throws InvalidConfigurationException
+     * @throws \Serfhos\MySearchCrawler\Exception\InvalidConfigurationException
      */
     public static function all(): array
     {

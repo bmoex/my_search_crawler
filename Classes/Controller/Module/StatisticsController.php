@@ -4,8 +4,6 @@ namespace Serfhos\MySearchCrawler\Controller\Module;
 
 /**
  * Controller: Statistics
- *
- * @package Serfhos\MySearchCrawler\Controller\Module
  */
 class StatisticsController extends ModuleActionController
 {

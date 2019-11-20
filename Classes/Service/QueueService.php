@@ -11,16 +11,12 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * Service: Queue
- *
- * @package Serfhos\MySearchCrawler\Service
  */
 class QueueService
 {
     public const TABLE = 'tx_mysearchcrawler_domain_model_queue';
 
-    /**
-     * @var string
-     */
+    /** @var string */
     protected $queueId = '';
 
     /**
@@ -115,7 +111,7 @@ class QueueService
 
     /**
      * @param string $tableName
-     * @return Connection
+     * @return \TYPO3\CMS\Core\Database\Connection
      */
     public function getConnectionForTable(string $tableName): Connection
     {
@@ -127,6 +123,6 @@ class QueueService
      */
     public function getLogger(): Logger
     {
-        return GeneralUtility::makeInstance(LogManager::class)->getLogger(__CLASS__);
+        return GeneralUtility::makeInstance(LogManager::class)->getLogger(self::class);
     }
 }
