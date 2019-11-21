@@ -132,6 +132,35 @@ class ElasticSearchService implements SingletonInterface
     }
 
     /**
+     * @param  array  $body
+     * @param  string  $scrollId
+     * @param  string|null  $index
+     * @return array
+     */
+    public function scroll($body = [], $scrollId = null, $index = null): array
+    {
+        $index = $index ?? $this->index;
+
+        if ($scrollId === null) {
+            $parameters = [
+                'scroll' => '30s',
+                'index' => $index,
+                'type' => self::INDEX_TYPE,
+                'body' => $body,
+            ];
+
+            return $this->client->search($parameters);
+        }
+
+        $parameters = [
+            'scroll' => '30s',
+            'scroll_id' => $scrollId,
+        ];
+
+        return $this->client->scroll($parameters);
+    }
+
+    /**
      * @param  string  $index
      * @return array
      */

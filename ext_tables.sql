@@ -4,7 +4,6 @@
 #
 CREATE TABLE tx_mysearchcrawler_domain_model_queue (
     uid int(11) NOT NULL auto_increment,
-    pid int(11) DEFAULT '0' NOT NULL,
     crdate int(11) DEFAULT '0' NOT NULL,
     cruser_id int(11) DEFAULT '0' NOT NULL,
     identifier varchar(40) DEFAULT '' NOT NULL,

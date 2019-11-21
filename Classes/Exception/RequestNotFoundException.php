@@ -2,9 +2,11 @@
 
 namespace Serfhos\MySearchCrawler\Exception;
 
+use LogicException;
+
 /**
  * Exception: Invalid configuration
  */
-class RequestNotFoundException extends \LogicException implements ExtensionException
+class RequestNotFoundException extends LogicException implements ExtensionException
 {
 }

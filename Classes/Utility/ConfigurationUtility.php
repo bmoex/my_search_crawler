@@ -2,6 +2,7 @@
 
 namespace Serfhos\MySearchCrawler\Utility;
 
+use ArrayAccess;
 use Serfhos\MySearchCrawler\Exception\InvalidConfigurationException;
 use TYPO3\CMS\Core\Utility\HttpUtility;
 
@@ -39,6 +40,7 @@ class ConfigurationUtility
         if (isset($configuration['elastic_search_index']) && is_string($configuration['elastic_search_index'])) {
             return $configuration['elastic_search_index'];
         }
+
         return self::EXTENSION;
     }
 
@@ -57,11 +59,12 @@ class ConfigurationUtility
                 return $configuration['command_crawler_verify_ssl'];
             }
         }
+
         return true;
     }
 
     /**
-     * @param string $url target url
+     * @param  string  $url  target url
      * @return string
      */
     public static function crawlUrl(string $url): string
@@ -74,8 +77,10 @@ class ConfigurationUtility
                 ['scheme' => $urlParts['scheme'], 'host' => $urlParts['host']]
                     = parse_url($configuration['crawl_domain_override'][$requestHost]);
             }
+
             return HttpUtility::buildUrl($urlParts);
         }
+
         return $url;
     }
 
@@ -92,7 +97,7 @@ class ConfigurationUtility
             // Re-retrieve data when referenced
             if (is_string($data)) {
                 static::$configuration = $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][$data];
-            } elseif (is_array($data) || $data instanceof \ArrayAccess) {
+            } elseif (is_array($data) || $data instanceof ArrayAccess) {
                 static::$configuration = $data;
             }
 

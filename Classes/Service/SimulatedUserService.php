@@ -2,6 +2,9 @@
 
 namespace Serfhos\MySearchCrawler\Service;
 
+use GuzzleHttp\Client;
+use Serfhos\MySearchCrawler\Utility\ConfigurationUtility;
+use TYPO3\CMS\Core\Utility\ArrayUtility;
 use TYPO3\CMS\Frontend\Utility\EidUtility;
 
 /**
@@ -9,6 +12,8 @@ use TYPO3\CMS\Frontend\Utility\EidUtility;
  */
 class SimulatedUserService
 {
+    protected const INDEX_CONNECTION_TIME_OUT = 15.0;
+
     /** @var \TYPO3\CMS\Frontend\Authentication\FrontendUserAuthentication */
     protected $frontendUserAuthentication;
 
@@ -19,6 +24,27 @@ class SimulatedUserService
     {
         // @TODO check if this is ok, for now?
         $this->frontendUserAuthentication = EidUtility::initFeUser();
+    }
+
+    /**
+     * @param  integer  $frontendUserId
+     * @return \GuzzleHttp\Client
+     */
+    public static function createClientForFrontendUser(int $frontendUserId): Client
+    {
+        $simulatedService = new self();
+        $httpOptions = $GLOBALS['TYPO3_CONF_VARS']['HTTP'];
+        ArrayUtility::mergeRecursiveWithOverrule($httpOptions, [
+            'timeout' => self::INDEX_CONNECTION_TIME_OUT,
+            'allow_redirects' => false,
+            'verify' => ConfigurationUtility::verify(),
+        ]);
+
+        if ($frontendUserId > 0 && $user = $simulatedService->getSessionId($frontendUserId)) {
+            $httpOptions['headers']['Cookie'] .= 'fe_typo_user=' . $user . ';';
+        }
+
+        return new Client($httpOptions);
     }
 
     /**

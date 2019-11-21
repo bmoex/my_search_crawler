@@ -2,18 +2,20 @@
 
 namespace Serfhos\MySearchCrawler\Exception;
 
+use LogicException;
+
 /**
  * Exception: Throws by lookup of shouldIndex()
  */
-class ShouldIndexException extends \LogicException implements ExtensionException
+class ShouldIndexException extends LogicException implements ExtensionException
 {
     /** @var array */
     public $context;
 
     /**
-     * @param string $message
-     * @param array $context
-     * @param integer $code
+     * @param  string  $message
+     * @param  array  $context
+     * @param  integer  $code
      */
     public static function throw(string $message, array $context, int $code)
     {

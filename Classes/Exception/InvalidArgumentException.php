@@ -2,9 +2,11 @@
 
 namespace Serfhos\MySearchCrawler\Exception;
 
+use UnexpectedValueException;
+
 /**
  * Exception: InvalidArgument
  */
-class InvalidArgumentException extends \UnexpectedValueException implements ExtensionException
+class InvalidArgumentException extends UnexpectedValueException implements ExtensionException
 {
 }

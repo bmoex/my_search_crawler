@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Serfhos\MySearchCrawler\Controller\Module;
 
 use Elasticsearch\Common\Exceptions\ElasticsearchException;

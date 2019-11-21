@@ -32,7 +32,7 @@ abstract class ModuleActionController extends ActionController
     /**
      * Constructor: ModuleController: Statistics
      *
-     * @param \Serfhos\MySearchCrawler\Service\ElasticSearchService $elasticSearchService
+     * @param  \Serfhos\MySearchCrawler\Service\ElasticSearchService  $elasticSearchService
      */
     public function __construct(ElasticSearchService $elasticSearchService)
     {
@@ -43,7 +43,7 @@ abstract class ModuleActionController extends ActionController
     /**
      * Set up the doc header properly here
      *
-     * @param \TYPO3\CMS\Extbase\Mvc\View\ViewInterface $view
+     * @param  \TYPO3\CMS\Extbase\Mvc\View\ViewInterface  $view
      */
     protected function initializeView(ViewInterface $view): void
     {

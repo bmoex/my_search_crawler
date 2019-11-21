@@ -12,8 +12,11 @@ class Page implements ElasticSearchIndex
 {
     /**
      * Constructor: Page
+     *
+     * @param  array  $row
+     * @throws \Exception
      */
-    public function __construct($row)
+    public function __construct(array $row)
     {
         $this->indexed = new DateTime();
 
@@ -49,12 +52,13 @@ class Page implements ElasticSearchIndex
     }
 
     /**
-     * @param \DateTime $indexed
+     * @param  \DateTime  $indexed
      * @return $this
      */
     public function setIndexed(DateTime $indexed): self
     {
         $this->indexed = $indexed;
+
         return $this;
     }
 
@@ -67,12 +71,13 @@ class Page implements ElasticSearchIndex
     }
 
     /**
-     * @param string $url
+     * @param  string  $url
      * @return $this
      */
     public function setUrl(string $url): self
     {
         $this->url = $url;
+
         return $this;
     }
 
@@ -86,6 +91,7 @@ class Page implements ElasticSearchIndex
         if ($this->getMeta()) {
             $title = $this->getLastMetaValue('og:title') ?? $title;
         }
+
         return (string)$title;
     }
 
@@ -98,12 +104,13 @@ class Page implements ElasticSearchIndex
     }
 
     /**
-     * @param string $title
+     * @param  string  $title
      * @return $this
      */
     public function setTitle(string $title): self
     {
         $this->title = $title;
+
         return $this;
     }
 
@@ -116,6 +123,7 @@ class Page implements ElasticSearchIndex
         if ($this->getMeta()) {
             $type = $this->getLastMetaValue('type') ?? $type;
         }
+
         return (string)$type;
     }
 
@@ -132,10 +140,10 @@ class Page implements ElasticSearchIndex
     }
 
     /**
-     * @param string $key
+     * @param  string  $key
      * @return mixed
      */
-    public function getLastMetaValue($key)
+    public function getLastMetaValue(string $key)
     {
         $values = $this->meta[$key] ?? [];
         if (empty($values)) {
@@ -149,6 +157,7 @@ class Page implements ElasticSearchIndex
         if (is_string($values)) {
             return $values;
         }
+
         return null;
     }
 
@@ -161,12 +170,13 @@ class Page implements ElasticSearchIndex
     }
 
     /**
-     * @param array $meta
+     * @param  array  $meta
      * @return $this
      */
     public function setMeta(array $meta): self
     {
         $this->meta = $meta;
+
         return $this;
     }
 
@@ -179,12 +189,13 @@ class Page implements ElasticSearchIndex
     }
 
     /**
-     * @param string $content
+     * @param  string  $content
      * @return $this
      */
     public function setContent(string $content): self
     {
         $this->content = $content;
+
         return $this;
     }
 

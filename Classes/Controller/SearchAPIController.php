@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Serfhos\MySearchCrawler\Controller;
 
 use Psr\Http\Message\ResponseInterface;
@@ -22,7 +20,7 @@ class SearchAPIController
     /**
      * Constructor: SearchAPI
      *
-     * @param \TYPO3\CMS\Extbase\Object\ObjectManagerInterface $objectManager
+     * @param  \TYPO3\CMS\Extbase\Object\ObjectManagerInterface  $objectManager
      */
     public function __construct(?ObjectManagerInterface $objectManager = null)
     {
@@ -32,8 +30,8 @@ class SearchAPIController
     /**
      * AJAX Action: Autocomplete
      *
-     * @param \Psr\Http\Message\ServerRequestInterface $request
-     * @param \Psr\Http\Message\ResponseInterface $response
+     * @param  \Psr\Http\Message\ServerRequestInterface  $request
+     * @param  \Psr\Http\Message\ResponseInterface  $response
      * @return \Psr\Http\Message\ResponseInterface
      */
     public function autocomplete(
@@ -64,14 +62,15 @@ class SearchAPIController
         }
 
         $response->getBody()->write(json_encode($suggestions));
+
         return $response->withAddedHeader('Content-Type', 'application/json');
     }
 
     /**
      * AJAX Action: search
      *
-     * @param \Psr\Http\Message\ServerRequestInterface $request
-     * @param \Psr\Http\Message\ResponseInterface $response
+     * @param  \Psr\Http\Message\ServerRequestInterface  $request
+     * @param  \Psr\Http\Message\ResponseInterface  $response
      * @return \Psr\Http\Message\ResponseInterface
      */
     public function search(
@@ -136,6 +135,7 @@ class SearchAPIController
         }
 
         $response->getBody()->write(json_encode($output));
+
         return $response->withAddedHeader('Content-Type', 'application/json');
     }
 
@@ -145,18 +145,19 @@ class SearchAPIController
     protected function getElasticSearchService(): ElasticSearchService
     {
         $objectManager = GeneralUtility::makeInstance(ObjectManager::class);
+
         return $objectManager->get(ElasticSearchService::class);
     }
 
     /**
      * Get parameter from given request (POST => GET)
      *
-     * @param \Psr\Http\Message\ServerRequestInterface $request
-     * @param string $parameter
-     * @param mixed $default
+     * @param  \Psr\Http\Message\ServerRequestInterface  $request
+     * @param  string  $parameter
+     * @param  mixed  $default
      * @return mixed
      */
-    protected function getParameter(ServerRequestInterface $request, $parameter, $default = null)
+    protected function getParameter(ServerRequestInterface $request, string $parameter, $default = null)
     {
         return $request->getParsedBody()[$parameter] ?? $request->getQueryParams()[$parameter] ?? $default;
     }

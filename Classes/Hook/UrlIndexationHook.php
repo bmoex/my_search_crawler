@@ -2,20 +2,12 @@
 
 namespace Serfhos\MySearchCrawler\Hook;
 
-use Serfhos\MySearchCrawler\Service\ElasticSearchService;
-use Serfhos\MySearchCrawler\Service\UrlService;
 use TYPO3\CMS\Core\SingletonInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Object\ObjectManager;
 use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
 
 class UrlIndexationHook implements SingletonInterface
 {
-    /** @var \Serfhos\MySearchCrawler\Service\UrlService */
-    protected $urlService;
-
-    /** @var \Serfhos\MySearchCrawler\Service\ElasticSearchService */
-    protected $elasticSearchService;
 
     /**
      * @param  array  $parameters
@@ -29,29 +21,4 @@ class UrlIndexationHook implements SingletonInterface
         $url = GeneralUtility::getIndpEnv('TYPO3_REQUEST_URL');
     }
 
-    /**
-     * @return \Serfhos\MySearchCrawler\Service\UrlService
-     */
-    protected function getUrlService(): UrlService
-    {
-        if ($this->urlService === null) {
-            $objectManager = GeneralUtility::makeInstance(ObjectManager::class);
-            $this->urlService = $objectManager->get(UrlService::class);
-        }
-
-        return $this->urlService;
-    }
-
-    /**
-     * @return \Serfhos\MySearchCrawler\Service\ElasticSearchService
-     */
-    protected function getElasticSearchService(): ElasticSearchService
-    {
-        if ($this->elasticSearchService === null) {
-            $objectManager = GeneralUtility::makeInstance(ObjectManager::class);
-            $this->elasticSearchService = $objectManager->get(ElasticSearchService::class);
-        }
-
-        return $this->elasticSearchService;
-    }
 }

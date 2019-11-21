@@ -1,14 +1,10 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Serfhos\MySearchCrawler\Command\Index;
 
-use Elasticsearch\Common\Exceptions\ElasticsearchException;
-use Serfhos\MySearchCrawler\Exception\ShouldIndexException;
-use Serfhos\MySearchCrawler\Request\CrawlerWebRequest;
-use Serfhos\MySearchCrawler\Service\ClientService;
-use Serfhos\MySearchCrawler\Service\ElasticSearchService;
+use Exception;
+use Serfhos\MySearchCrawler\Service\CrawlerWebRequestService;
+use Serfhos\MySearchCrawler\Service\SimulatedUserService;
 use Serfhos\MySearchCrawler\Utility\ConfigurationUtility;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -22,13 +18,13 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 class AddCommand extends Command
 {
     /**
-     * Configure the command by defining the name, options and arguments
+     * @return void
      */
     protected function configure(): void
     {
         $this->setDescription('Add crawled url in current indexation');
         $this->addArgument('url', InputArgument::REQUIRED);
-        $this->addArgument('frontendUserId', InputArgument::OPTIONAL);
+        $this->addArgument('frontendUserId', InputArgument::OPTIONAL, 'Frontend User to simulate', 0);
     }
 
     /**
@@ -40,69 +36,33 @@ class AddCommand extends Command
     {
         $url = $input->getArgument('url');
         $frontendUserId = $input->getArgument('frontendUserId') ?: 0;
-        $client = $this->getClientService()->createForFrontendUser($frontendUserId);
+        $client = SimulatedUserService::createClientForFrontendUser($frontendUserId);
 
         try {
-            $request = new CrawlerWebRequest(
-                $client,
-                $url
-            );
-
-            if ($this->index($request, true)) {
-                $output->writeln('Index successfully added (' . $url . ') to index (' . ConfigurationUtility::index() . ')');
+            if ($this->getCrawlerWebRequestService()->crawl($client, $url, true)) {
+                $output->writeln(
+                    '<info>'
+                    . 'Index successfully added (' . $url . ') to index (' . ConfigurationUtility::index() . ')'
+                    . '</info>'
+                );
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // This should be handled in code!
-            $output->writeln(date('c') . ':' . get_class($e) . ':' . $e->getCode() . ':' . $e->getMessage());
+            $output->writeln(
+                '<error>'
+                . date('c') . ':' . get_class($e) . ':' . $e->getCode() . ':' . $e->getMessage()
+                . '</error>'
+            );
         }
 
         return 0;
     }
 
     /**
-     * @param  \Serfhos\MySearchCrawler\Request\CrawlerWebRequest  $request
-     * @param  bool  $throw
-     * @return boolean
-     * @throws \Serfhos\MySearchCrawler\Exception\ShouldIndexException if $throw is configured
+     * @return \Serfhos\MySearchCrawler\Service\CrawlerWebRequestService
      */
-    protected function index(CrawlerWebRequest $request, $throw = false): bool
+    public function getCrawlerWebRequestService(): CrawlerWebRequestService
     {
-        $index = $request->getElasticSearchIndex();
-        try {
-            if ($request->shouldIndex()) {
-                $this->getElasticSearchService()->addDocument($index);
-            }
-
-            return true;
-        } catch (ShouldIndexException $e) {
-            // Always try to delete document!
-            try {
-                $this->getElasticSearchService()->removeDocument($index->getIndexIdentifier());
-            } catch (ElasticsearchException $_e) {
-                // Do nothing..
-            }
-
-            if ($throw) {
-                throw $e;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * @return \Serfhos\MySearchCrawler\Service\ClientService
-     */
-    public function getClientService(): ClientService
-    {
-        return GeneralUtility::makeInstance(ClientService::class);
-    }
-
-    /**
-     * @return \Serfhos\MySearchCrawler\Service\ElasticSearchService
-     */
-    public function getElasticSearchService(): ElasticSearchService
-    {
-        return GeneralUtility::makeInstance(ElasticSearchService::class);
+        return GeneralUtility::makeInstance(CrawlerWebRequestService::class);
     }
 }
