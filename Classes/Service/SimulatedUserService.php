@@ -22,7 +22,7 @@ class SimulatedUserService
      */
     public function __construct()
     {
-        // @TODO check if this is ok, for now?
+        // @deprecated should find a new opening to generate FE user for cli commands
         $this->frontendUserAuthentication = EidUtility::initFeUser();
     }
 

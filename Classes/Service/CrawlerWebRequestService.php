@@ -27,8 +27,10 @@ class CrawlerWebRequestService
         ?ObjectManager $objectManager = null,
         ?ElasticSearchService $elasticSearchService = null
     ) {
-        $this->objectManager = $objectManager ?? GeneralUtility::makeInstance(ObjectManager::class);
-        $this->elasticSearchService = $elasticSearchService ?? GeneralUtility::makeInstance(ElasticSearchService::class);
+        $this->objectManager = $objectManager
+            ?? GeneralUtility::makeInstance(ObjectManager::class);
+        $this->elasticSearchService = $elasticSearchService
+            ?? GeneralUtility::makeInstance(ElasticSearchService::class);
     }
 
     /**

@@ -146,7 +146,7 @@ class CrawlerWebRequest
     {
         $metaTags = [];
         try {
-            $this->crawler->filter('meta')->each(function (Crawler $node) use (&$metaTags) {
+            $this->crawler->filter('meta')->each(function (Crawler $node) use (&$metaTags): void {
                 $name = $content = null;
                 if ($node->attr('name') && $node->attr('name') !== 'viewport') {
                     $name = $node->attr('name');

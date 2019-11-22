@@ -1,12 +1,12 @@
 <?php
 call_user_func(function ($extension): void {
     // Register main module icon
-    $iconRegistry = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\TYPO3\CMS\Core\Imaging\IconRegistry::class);
-    $iconRegistry->registerIcon(
-        'module-' . $extension,
-        \TYPO3\CMS\Core\Imaging\IconProvider\FontawesomeIconProvider::class,
-        ['name' => 'floppy']
-    );
+    \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\TYPO3\CMS\Core\Imaging\IconRegistry::class)
+        ->registerIcon(
+            'module-' . $extension,
+            \TYPO3\CMS\Core\Imaging\IconProvider\FontawesomeIconProvider::class,
+            ['name' => 'floppy']
+        );
 
     // Register the top-level module
     $name = str_replace('_', '', $extension);

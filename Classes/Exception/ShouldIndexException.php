@@ -17,7 +17,7 @@ class ShouldIndexException extends LogicException implements ExtensionException
      * @param  array  $context
      * @param  integer  $code
      */
-    public static function throw(string $message, array $context, int $code)
+    public static function throw(string $message, array $context, int $code): void
     {
         $exception = new static($message, $code);
         $exception->context = $context;

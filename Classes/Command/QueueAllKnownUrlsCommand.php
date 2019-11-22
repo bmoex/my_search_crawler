@@ -3,7 +3,6 @@
 namespace Serfhos\MySearchCrawler\Command;
 
 use Serfhos\MySearchCrawler\Service\QueueService;
-use Serfhos\MySearchCrawler\Service\UrlService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputInterface;

@@ -2,6 +2,7 @@
 
 namespace Serfhos\MySearchCrawler\Service;
 
+use Elasticsearch\Client;
 use Elasticsearch\ClientBuilder;
 use Serfhos\MySearchCrawler\Domain\Model\Index\ElasticSearchIndex;
 use Serfhos\MySearchCrawler\Utility\ConfigurationUtility;
@@ -54,7 +55,7 @@ class ElasticSearchService implements SingletonInterface
      * @param  \Elasticsearch\Client  $client
      * @return $this
      */
-    public function setClient($client): self
+    public function setClient(Client $client): self
     {
         $this->client = $client;
 
@@ -64,7 +65,7 @@ class ElasticSearchService implements SingletonInterface
     /**
      * @return \Elasticsearch\Client
      */
-    public function getClient()
+    public function getClient(): Client
     {
         return $this->client;
     }
@@ -102,7 +103,7 @@ class ElasticSearchService implements SingletonInterface
      * @param  string  $index
      * @return array
      */
-    public function count($body = [], $index = null): array
+    public function count(array $body = [], ?string $index = null): array
     {
         $index = $index ?? $this->index;
         $parameters = [
@@ -119,7 +120,7 @@ class ElasticSearchService implements SingletonInterface
      * @param  string  $index
      * @return array
      */
-    public function search($body = [], $index = null): array
+    public function search(array $body = [], ?string $index = null): array
     {
         $index = $index ?? $this->index;
         $parameters = [
@@ -137,7 +138,7 @@ class ElasticSearchService implements SingletonInterface
      * @param  string|null  $index
      * @return array
      */
-    public function scroll($body = [], $scrollId = null, $index = null): array
+    public function scroll(array $body = [], ?string $scrollId = null, ?string $index = null): array
     {
         $index = $index ?? $this->index;
 
@@ -164,7 +165,7 @@ class ElasticSearchService implements SingletonInterface
      * @param  string  $index
      * @return array
      */
-    public function flush($index = null): array
+    public function flush(?string $index = null): array
     {
         $index = $index ?? $this->index;
 
@@ -178,7 +179,7 @@ class ElasticSearchService implements SingletonInterface
      * @param  string  $index
      * @return array
      */
-    public function deleteByQuery(array $body, $index = null): array
+    public function deleteByQuery(array $body, ?string $index = null): array
     {
         $index = $index ?? $this->index;
 
@@ -194,7 +195,7 @@ class ElasticSearchService implements SingletonInterface
      * @param  string  $index
      * @return array
      */
-    public function addDocument(ElasticSearchIndex $document, $index = null): array
+    public function addDocument(ElasticSearchIndex $document, ?string $index = null): array
     {
         $index = $index ?? $this->index;
         /** @var \Serfhos\MySearchCrawler\Domain\Model\Index\Page $document */
@@ -227,7 +228,7 @@ class ElasticSearchService implements SingletonInterface
      * @param  string  $index
      * @return array
      */
-    public function removeDocument($identifier, $index = null): array
+    public function removeDocument(string $identifier, ?string $index = null): array
     {
         return $this->client->delete([
             'index' => $index ?? $this->index,
