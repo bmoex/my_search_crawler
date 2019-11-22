@@ -4,8 +4,6 @@ namespace Serfhos\MySearchCrawler\Domain\Model\Index;
 
 /**
  * ElasticSearch: Model Index
- *
- * @package Serfhos\MySearchCrawler\Domain\Model\Index
  */
 interface ElasticSearchIndex
 {

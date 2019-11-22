@@ -3,6 +3,7 @@
 namespace Serfhos\MySearchCrawler\Service;
 
 use Doctrine\DBAL\DBALException;
+use Generator;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Log\Logger;
@@ -11,17 +12,16 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * Service: Queue
- *
- * @package Serfhos\MySearchCrawler\Service
  */
 class QueueService
 {
     public const TABLE = 'tx_mysearchcrawler_domain_model_queue';
 
-    /**
-     * @var string
-     */
-    protected $queueId = '';
+    /** @var string */
+    protected $queueId;
+
+    /** @var \TYPO3\CMS\Core\Database\Connection */
+    protected $connection;
 
     /**
      * Constructor: Service: Queue
@@ -29,66 +29,74 @@ class QueueService
     public function __construct()
     {
         $this->queueId = md5(uniqid('', true));
+        $this->connection = GeneralUtility::makeInstance(ConnectionPool::class)
+            ->getConnectionForTable(self::TABLE);
     }
 
     /**
-     * Remove duplicated entries
-     *
-     * @return integer total of deleted items
+     * @param  string  $url
+     * @return string
      */
-    public function cleanDuplicateQueueEntries(): int
+    public function generateIdentifier(string $url): string
     {
-        try {
-            return $this->getConnectionForTable(self::TABLE)->executeUpdate(
-                'DELETE `a` FROM ' . self::TABLE . ' AS a, ' . self::TABLE . ' AS b '
-                . ' WHERE a.uid < b.uid '
-                . ' AND a.identifier <=> b.identifier;'
-            );
-        } catch (DBALException $e) {
-            return 0;
-        }
+        return md5($url);
     }
 
     /**
-     * @param array $row
+     * @param  string  $identifier
+     * @return bool
+     */
+    protected function isQueued(string $identifier): bool
+    {
+        return (bool)$this->connection->count('uid', self::TABLE, ['identifier' => $identifier]);
+    }
+
+    /**
+     * @param  string  $url
+     * @param  array|null  $caller
      * @return boolean
      */
-    public function enqueue(array $row): bool
+    public function enqueue(string $url, ?array $caller = null): bool
     {
-        return (bool)$this->getConnectionForTable(self::TABLE)->insert(self::TABLE, $row);
+        $identifier = $this->generateIdentifier($url);
+        if ($this->isQueued($identifier)) {
+            return false;
+        }
+
+        return (bool)$this->connection->insert(self::TABLE, [
+            'crdate' => time(),
+            'cruser_id' => $GLOBALS['BE_USER']->user['id'] ?? 0,
+            'identifier' => $identifier,
+            'page_url' => $url,
+            'caller' => $caller ? json_encode($caller, JSON_PRETTY_PRINT) : null,
+        ]);
     }
 
     /**
-     * @param integer $uid
+     * @param  integer  $uid
      * @return boolean
      */
     public function dequeue(int $uid): bool
     {
-        return (bool)$this->getConnectionForTable(self::TABLE)->delete(
-            self::TABLE,
-            ['uid' => $uid],
-            [Connection::PARAM_INT]
-        );
+        return (bool)$this->connection->delete(self::TABLE, ['uid' => $uid], [Connection::PARAM_INT]);
     }
 
     /**
      * Get queue generator for parallel executions
      *
-     * @param integer $limit
+     * @param  integer  $limit
      * @return \Generator
      */
-    public function getQueue(int $limit): ?\Generator
+    public function getQueue(int $limit): ?Generator
     {
-        $connection = $this->getConnectionForTable(self::TABLE);
-        $exception = null;
         try {
-            $connection->executeUpdate(
+            $this->connection->executeUpdate(
                 'UPDATE ' . self::TABLE . ' '
                 . ' SET running = "' . $this->queueId . '" '
                 . ' WHERE running = "" '
                 . ' LIMIT ' . $limit
             );
-            $result = $connection->select(
+            $result = $this->connection->select(
                 ['uid', 'identifier', 'page_url', 'caller'],
                 self::TABLE,
                 ['running' => $this->queueId]
@@ -102,7 +110,7 @@ class QueueService
 
         try {
             // Always remove runner id from queue and still throw exception
-            $connection->update(
+            $this->connection->update(
                 self::TABLE,
                 ['running' => ''],
                 ['running' => $this->queueId]
@@ -114,19 +122,10 @@ class QueueService
     }
 
     /**
-     * @param string $tableName
-     * @return Connection
-     */
-    public function getConnectionForTable(string $tableName): Connection
-    {
-        return GeneralUtility::makeInstance(ConnectionPool::class)->getConnectionForTable($tableName);
-    }
-
-    /**
      * @return \TYPO3\CMS\Core\Log\Logger
      */
     public function getLogger(): Logger
     {
-        return GeneralUtility::makeInstance(LogManager::class)->getLogger(__CLASS__);
+        return GeneralUtility::makeInstance(LogManager::class)->getLogger(self::class);
     }
 }

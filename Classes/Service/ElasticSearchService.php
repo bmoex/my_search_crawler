@@ -5,26 +5,20 @@ namespace Serfhos\MySearchCrawler\Service;
 use Elasticsearch\Client;
 use Elasticsearch\ClientBuilder;
 use Serfhos\MySearchCrawler\Domain\Model\Index\ElasticSearchIndex;
-use Serfhos\MySearchCrawler\Domain\Model\Index\Page;
 use Serfhos\MySearchCrawler\Utility\ConfigurationUtility;
+use TYPO3\CMS\Core\SingletonInterface;
 
 /**
  * Service: ElasticSearch
- *
- * @package Serfhos\MySearchCrawler\Service
  */
-class ElasticSearchService
+class ElasticSearchService implements SingletonInterface
 {
     public const INDEX_TYPE = 'crawled_content';
 
-    /**
-     * @var string
-     */
+    /** @var string */
     protected $index;
 
-    /**
-     * @var \Elasticsearch\Client
-     */
+    /** @var \Elasticsearch\Client */
     protected $client;
 
     /**
@@ -39,12 +33,13 @@ class ElasticSearchService
     }
 
     /**
-     * @param string $index
+     * @param  string  $index
      * @return $this
      */
     public function setIndex(string $index): self
     {
         $this->index = $index;
+
         return $this;
     }
 
@@ -57,19 +52,20 @@ class ElasticSearchService
     }
 
     /**
-     * @param \Elasticsearch\Client $client
+     * @param  \Elasticsearch\Client  $client
      * @return $this
      */
-    public function setClient($client): self
+    public function setClient(Client $client): self
     {
         $this->client = $client;
+
         return $this;
     }
 
     /**
-     * @return Client
+     * @return \Elasticsearch\Client
      */
-    public function getClient()
+    public function getClient(): Client
     {
         return $this->client;
     }
@@ -98,15 +94,16 @@ class ElasticSearchService
                     ] + $index;
             }
         }
+
         return $output;
     }
 
     /**
-     * @param array $body
-     * @param string $index
+     * @param  array  $body
+     * @param  string  $index
      * @return array
      */
-    public function count($body = [], $index = null): array
+    public function count(array $body = [], ?string $index = null): array
     {
         $index = $index ?? $this->index;
         $parameters = [
@@ -114,15 +111,16 @@ class ElasticSearchService
             'type' => self::INDEX_TYPE,
             'body' => $body,
         ];
+
         return $this->client->count($parameters);
     }
 
     /**
-     * @param array $body
-     * @param string $index
+     * @param  array  $body
+     * @param  string  $index
      * @return array
      */
-    public function search($body = [], $index = null): array
+    public function search(array $body = [], ?string $index = null): array
     {
         $index = $index ?? $this->index;
         $parameters = [
@@ -130,29 +128,61 @@ class ElasticSearchService
             'type' => self::INDEX_TYPE,
             'body' => $body,
         ];
+
         return $this->client->search($parameters);
     }
 
     /**
-     * @param string $index
+     * @param  array  $body
+     * @param  string  $scrollId
+     * @param  string|null  $index
      * @return array
      */
-    public function flush($index = null): array
+    public function scroll(array $body = [], ?string $scrollId = null, ?string $index = null): array
     {
         $index = $index ?? $this->index;
+
+        if ($scrollId === null) {
+            $parameters = [
+                'scroll' => '30s',
+                'index' => $index,
+                'type' => self::INDEX_TYPE,
+                'body' => $body,
+            ];
+
+            return $this->client->search($parameters);
+        }
+
+        $parameters = [
+            'scroll' => '30s',
+            'scroll_id' => $scrollId,
+        ];
+
+        return $this->client->scroll($parameters);
+    }
+
+    /**
+     * @param  string  $index
+     * @return array
+     */
+    public function flush(?string $index = null): array
+    {
+        $index = $index ?? $this->index;
+
         return $this->client->indices()->delete([
             'index' => $index,
         ]);
     }
 
     /**
-     * @param array $body
-     * @param string $index
+     * @param  array  $body
+     * @param  string  $index
      * @return array
      */
-    public function deleteByQuery(array $body, $index = null): array
+    public function deleteByQuery(array $body, ?string $index = null): array
     {
         $index = $index ?? $this->index;
+
         return $this->client->deleteByQuery([
             'index' => $index,
             'type' => self::INDEX_TYPE,
@@ -161,14 +191,14 @@ class ElasticSearchService
     }
 
     /**
-     * @param ElasticSearchIndex $document
-     * @param string $index
+     * @param  \Serfhos\MySearchCrawler\Domain\Model\Index\ElasticSearchIndex  $document
+     * @param  string  $index
      * @return array
      */
-    public function addDocument(ElasticSearchIndex $document, $index = null): array
+    public function addDocument(ElasticSearchIndex $document, ?string $index = null): array
     {
         $index = $index ?? $this->index;
-        /** @var Page $document */
+        /** @var \Serfhos\MySearchCrawler\Domain\Model\Index\Page $document */
         if (!$this->client->indices()->exists(['index' => $index])) {
             $this->client->indices()->create([
                 'index' => $this->index,
@@ -184,6 +214,7 @@ class ElasticSearchService
                 ],
             ]);
         }
+
         return $this->client->index([
             'index' => $this->index,
             'type' => self::INDEX_TYPE,
@@ -193,11 +224,11 @@ class ElasticSearchService
     }
 
     /**
-     * @param string $identifier
-     * @param string $index
+     * @param  string  $identifier
+     * @param  string  $index
      * @return array
      */
-    public function removeDocument($identifier, $index = null): array
+    public function removeDocument(string $identifier, ?string $index = null): array
     {
         return $this->client->delete([
             'index' => $index ?? $this->index,

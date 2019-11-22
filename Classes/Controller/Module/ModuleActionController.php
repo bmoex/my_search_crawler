@@ -9,15 +9,13 @@ use TYPO3\CMS\Extbase\Mvc\View\ViewInterface;
 
 /**
  * Backend: Abstract ModuleActionController
- *
- * @package Serfhos\MySearchCrawler\Controller\Module
  */
 abstract class ModuleActionController extends ActionController
 {
     /**
      * Override class variable for autocomplete
      *
-     * @var BackendTemplateView
+     * @var \TYPO3\CMS\Backend\View\BackendTemplateView
      */
     protected $view;
 
@@ -28,15 +26,13 @@ abstract class ModuleActionController extends ActionController
      */
     protected $defaultViewObjectName = BackendTemplateView::class;
 
-    /**
-     * @var ElasticSearchService
-     */
+    /** @var \Serfhos\MySearchCrawler\Service\ElasticSearchService */
     protected $elasticSearchService;
 
     /**
      * Constructor: ModuleController: Statistics
      *
-     * @param ElasticSearchService $elasticSearchService
+     * @param  \Serfhos\MySearchCrawler\Service\ElasticSearchService  $elasticSearchService
      */
     public function __construct(ElasticSearchService $elasticSearchService)
     {
@@ -47,11 +43,11 @@ abstract class ModuleActionController extends ActionController
     /**
      * Set up the doc header properly here
      *
-     * @param ViewInterface $view
+     * @param  \TYPO3\CMS\Extbase\Mvc\View\ViewInterface  $view
      */
     protected function initializeView(ViewInterface $view): void
     {
-        /** @var BackendTemplateView $view */
+        /** @var \TYPO3\CMS\Backend\View\BackendTemplateView $view */
         parent::initializeView($view);
         if ($view instanceof BackendTemplateView) {
             $view->getModuleTemplate()->getPageRenderer()->loadRequireJsModule('TYPO3/CMS/Backend/Modal');
@@ -61,7 +57,7 @@ abstract class ModuleActionController extends ActionController
                 $view->assign('cluster', $cluster);
                 $view->getModuleTemplate()->getDocHeaderComponent()->setMetaInformation([
                     'uid' => (string)$cluster['version']['number'],
-                    'title' => 'ElasticSearch'
+                    'title' => 'ElasticSearch',
                 ]);
             }
         }

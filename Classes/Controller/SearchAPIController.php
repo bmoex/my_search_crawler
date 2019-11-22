@@ -1,34 +1,28 @@
 <?php
-declare(strict_types=1);
 
 namespace Serfhos\MySearchCrawler\Controller;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Serfhos\MySearchCrawler\Service\ElasticSearchService;
-use Serfhos\MySearchCrawler\Service\SearchFormatterService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Object\ObjectManager;
 use TYPO3\CMS\Extbase\Object\ObjectManagerInterface;
 
 /**
  * Frontend AJAX Controller: SearchAPI
- *
- * @package Serfhos\MySearchCrawler\Console\Command
  */
 class SearchAPIController
 {
-    /**
-     * @var ObjectManagerInterface
-     */
+    /** @var \TYPO3\CMS\Extbase\Object\ObjectManagerInterface */
     protected $objectManager;
 
     /**
      * Constructor: SearchAPI
      *
-     * @param ObjectManagerInterface $objectManager
+     * @param  \TYPO3\CMS\Extbase\Object\ObjectManagerInterface  $objectManager
      */
-    public function __construct(ObjectManagerInterface $objectManager = null)
+    public function __construct(?ObjectManagerInterface $objectManager = null)
     {
         $this->objectManager = $objectManager ?? GeneralUtility::makeInstance(ObjectManager::class);
     }
@@ -36,9 +30,9 @@ class SearchAPIController
     /**
      * AJAX Action: Autocomplete
      *
-     * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
-     * @return ResponseInterface
+     * @param  \Psr\Http\Message\ServerRequestInterface  $request
+     * @param  \Psr\Http\Message\ResponseInterface  $response
+     * @return \Psr\Http\Message\ResponseInterface
      */
     public function autocomplete(
         ServerRequestInterface $request,
@@ -57,7 +51,7 @@ class SearchAPIController
                             'field' => 'suggest',
                         ],
                     ],
-                ]
+                ],
             ]);
 
             if (isset($result['suggest']['try'][0]['options'])) {
@@ -68,15 +62,16 @@ class SearchAPIController
         }
 
         $response->getBody()->write(json_encode($suggestions));
+
         return $response->withAddedHeader('Content-Type', 'application/json');
     }
 
     /**
      * AJAX Action: search
      *
-     * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
-     * @return ResponseInterface
+     * @param  \Psr\Http\Message\ServerRequestInterface  $request
+     * @param  \Psr\Http\Message\ResponseInterface  $response
+     * @return \Psr\Http\Message\ResponseInterface
      */
     public function search(
         ServerRequestInterface $request,
@@ -101,7 +96,7 @@ class SearchAPIController
                     'fields' => [
                         'content' => [
                             'pre_tags' => '<em>',
-                            'post_tags' => '</em>'
+                            'post_tags' => '</em>',
                         ],
                     ],
                 ],
@@ -140,27 +135,29 @@ class SearchAPIController
         }
 
         $response->getBody()->write(json_encode($output));
+
         return $response->withAddedHeader('Content-Type', 'application/json');
     }
 
     /**
-     * @return ElasticSearchService
+     * @return \Serfhos\MySearchCrawler\Service\ElasticSearchService
      */
     protected function getElasticSearchService(): ElasticSearchService
     {
         $objectManager = GeneralUtility::makeInstance(ObjectManager::class);
+
         return $objectManager->get(ElasticSearchService::class);
     }
 
     /**
      * Get parameter from given request (POST => GET)
      *
-     * @param ServerRequestInterface $request
-     * @param string $parameter
-     * @param mixed $default
+     * @param  \Psr\Http\Message\ServerRequestInterface  $request
+     * @param  string  $parameter
+     * @param  mixed  $default
      * @return mixed
      */
-    protected function getParameter(ServerRequestInterface $request, $parameter, $default = null)
+    protected function getParameter(ServerRequestInterface $request, string $parameter, $default = null)
     {
         return $request->getParsedBody()[$parameter] ?? $request->getQueryParams()[$parameter] ?? $default;
     }

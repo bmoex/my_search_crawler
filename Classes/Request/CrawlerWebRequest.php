@@ -5,37 +5,29 @@ namespace Serfhos\MySearchCrawler\Request;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use InvalidArgumentException;
-use Serfhos\MySearchCrawler\Domain\Model\Index\ElasticSearchIndex;
 use Serfhos\MySearchCrawler\Exception\RequestNotFoundException;
 use Serfhos\MySearchCrawler\Exception\ShouldIndexException;
 use Serfhos\MySearchCrawler\Utility\ConfigurationUtility;
 use Symfony\Component\DomCrawler\Crawler;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Object\ObjectManager;
 
 /**
  * WebRequest: Crawler
- *
- * @package Serfhos\MySearchCrawler\Request
  */
 class CrawlerWebRequest
 {
 
-    /**
-     * @var \Psr\Http\Message\ResponseInterface
-     */
+    /** @var \Psr\Http\Message\ResponseInterface */
     public $request;
 
-    /**
-     * @var Crawler
-     */
+    /** @var \Symfony\Component\DomCrawler\Crawler */
     protected $crawler;
 
     /**
      * Constructor: CrawlerWebRequest
      *
-     * @param Client $client
-     * @param string $uri
+     * @param  \GuzzleHttp\Client  $client
+     * @param  string  $uri
      */
     public function __construct(Client $client, string $uri)
     {
@@ -58,8 +50,8 @@ class CrawlerWebRequest
     }
 
     /**
-     * @throws \Serfhos\MySearchCrawler\Exception\ShouldIndexException
      * @return bool
+     * @throws \Serfhos\MySearchCrawler\Exception\ShouldIndexException
      */
     public function shouldIndex(): bool
     {
@@ -81,13 +73,29 @@ class CrawlerWebRequest
 
         // Check if link is different than canonical
         try {
+            $crawledUrl = $this->crawler->getUri();
             $canonicalUrl = $this->crawler->filter('link[rel=canonical]')->last()->attr('href');
-            if ($canonicalUrl !== $this->crawler->getUri()) {
-                ShouldIndexException::throw(
-                    'Canonical link differs from requested url',
-                    ['canonical' => $canonicalUrl, 'requested' => $this->crawler->getUri()],
-                    1547025139698
-                );
+            if (GeneralUtility::isValidUrl($canonicalUrl)) {
+                if ($canonicalUrl !== $crawledUrl) {
+                    ShouldIndexException::throw(
+                        'Canonical link differs from requested url',
+                        ['canonical' => $canonicalUrl, 'requested' => $this->crawler->getUri()],
+                        1547025139698
+                    );
+                }
+            } else {
+                $relativeCrawledUrl = preg_replace('#^(://|[^/?])+#', '', $crawledUrl);
+                if ($canonicalUrl !== $relativeCrawledUrl) {
+                    ShouldIndexException::throw(
+                        'Canonical link differs from requested relative url',
+                        [
+                            'canonical' => $canonicalUrl,
+                            'requested' => $this->crawler->getUri(),
+                            'relative' => $relativeCrawledUrl,
+                        ],
+                        1574266503139
+                    );
+                }
             }
         } catch (InvalidArgumentException $e) {
             // Never throw exception for lookup
@@ -124,29 +132,21 @@ class CrawlerWebRequest
     }
 
     /**
-     * @return ElasticSearchIndex
+     * @return string
      */
-    public function getElasticSearchIndex(): ElasticSearchIndex
+    public function getUri(): string
     {
-        /** @var ElasticSearchIndex $index */
-        $objectManager = GeneralUtility::makeInstance(ObjectManager::class);
-        $index = $objectManager->get(ElasticSearchIndex::class, [
-            'url' => $this->crawler->getUri(),
-            'title' => $this->getTitle(),
-            'meta' => $this->getMetaTags(),
-            'content' => $this->getContent(),
-        ]);
-        return $index;
+        return $this->crawler->getUri();
     }
 
     /**
      * @return array
      */
-    protected function getMetaTags(): array
+    public function getMetaTags(): array
     {
         $metaTags = [];
         try {
-            $this->crawler->filter('meta')->each(function (Crawler $node) use (&$metaTags) {
+            $this->crawler->filter('meta')->each(function (Crawler $node) use (&$metaTags): void {
                 $name = $content = null;
                 if ($node->attr('name') && $node->attr('name') !== 'viewport') {
                     $name = $node->attr('name');
@@ -175,13 +175,14 @@ class CrawlerWebRequest
         } catch (InvalidArgumentException $e) {
             // Never throw exception for lookup
         }
+
         return $metaTags;
     }
 
     /**
      * @return string
      */
-    protected function getTitle(): string
+    public function getTitle(): string
     {
         $title = '';
         try {
@@ -196,7 +197,7 @@ class CrawlerWebRequest
     /**
      * @return string
      */
-    protected function getContent(): string
+    public function getContent(): string
     {
         $content = '';
         $elements = [];

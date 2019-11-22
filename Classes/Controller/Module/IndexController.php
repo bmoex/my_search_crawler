@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 
 namespace Serfhos\MySearchCrawler\Controller\Module;
 
@@ -10,17 +9,15 @@ use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
 /**
  * Controller: Index
- * @package Serfhos\MySearchCrawler\Controller
  */
 class IndexController extends ModuleActionController
 {
-
     /**
-     * @param string $index
-     * @param string $body
+     * @param  string  $index
+     * @param  string  $body
      * @return void
      */
-    public function findByQueryAction(string $index, string $body = null): void
+    public function findByQueryAction(string $index, ?string $body = null): void
     {
         $this->view->assignMultiple([
             'index' => $index,
@@ -28,10 +25,10 @@ class IndexController extends ModuleActionController
                     'query' => [
                         'simple_query_string' => [
                             'query' => 'Search',
-                            'fields' => ['content', 'title^5', 'url']
+                            'fields' => ['content', 'title^5', 'url'],
                         ],
-                    ]
-                ], JSON_PRETTY_PRINT)
+                    ],
+                ], JSON_PRETTY_PRINT),
         ]);
 
         if ($body) {
@@ -40,7 +37,11 @@ class IndexController extends ModuleActionController
                 $this->view->assign('results', $this->elasticSearchService->search($body, $index));
             } catch (ElasticsearchException $e) {
                 $this->addFlashMessage(
-                    LocalizationUtility::translate('actions.find_by_query.no_valid_body_given', ConfigurationUtility::EXTENSION, [$e->getMessage()]),
+                    LocalizationUtility::translate(
+                        'actions.find_by_query.no_valid_body_given',
+                        ConfigurationUtility::EXTENSION,
+                        [$e->getMessage()]
+                    ),
                     '',
                     AbstractMessage::ERROR
                 );
@@ -49,8 +50,8 @@ class IndexController extends ModuleActionController
     }
 
     /**
-     * @param string $index
-     * @param string $body
+     * @param  string  $index
+     * @param  string  $body
      * @throws \TYPO3\CMS\Extbase\Mvc\Exception\StopActionException
      * @throws \TYPO3\CMS\Extbase\Mvc\Exception\UnsupportedRequestTypeException
      */
@@ -60,7 +61,10 @@ class IndexController extends ModuleActionController
         $body = json_decode($body, true);
         if (empty($body)) {
             $this->addFlashMessage(
-                LocalizationUtility::translate('actions.delete_by_query.no_valid_query_given', ConfigurationUtility::EXTENSION),
+                LocalizationUtility::translate(
+                    'actions.delete_by_query.no_valid_query_given',
+                    ConfigurationUtility::EXTENSION
+                ),
                 '',
                 AbstractMessage::ERROR
             );
@@ -68,13 +72,21 @@ class IndexController extends ModuleActionController
             $result = $this->elasticSearchService->deleteByQuery($body, $index);
             if ($result) {
                 $this->addFlashMessage(
-                    LocalizationUtility::translate('actions.delete_by_query.successful', ConfigurationUtility::EXTENSION, [$body]),
+                    LocalizationUtility::translate(
+                        'actions.delete_by_query.successful',
+                        ConfigurationUtility::EXTENSION,
+                        [$body]
+                    ),
                     '',
                     AbstractMessage::OK
                 );
             } else {
                 $this->addFlashMessage(
-                    LocalizationUtility::translate('actions.delete_by_query.unsuccessful', ConfigurationUtility::EXTENSION, [$body]),
+                    LocalizationUtility::translate(
+                        'actions.delete_by_query.unsuccessful',
+                        ConfigurationUtility::EXTENSION,
+                        [$body]
+                    ),
                     '',
                     AbstractMessage::WARNING
                 );
@@ -85,29 +97,41 @@ class IndexController extends ModuleActionController
 
     /**
      * Action: Flush specific document from index
-     * @param string $index
-     * @param string $document
-     * @param string $body
+     *
+     * @param  string  $index
+     * @param  string  $document
+     * @param  string  $body
      * @throws \TYPO3\CMS\Extbase\Mvc\Exception\StopActionException
      * @throws \TYPO3\CMS\Extbase\Mvc\Exception\UnsupportedRequestTypeException
      */
-    public function deleteDocumentAction(string $index, string $document, string $body = null): void
+    public function deleteDocumentAction(string $index, string $document, ?string $body = null): void
     {
         if (empty($document)) {
             $this->addFlashMessage(
-                LocalizationUtility::translate('actions.delete_document.no_document_given', ConfigurationUtility::EXTENSION),
+                LocalizationUtility::translate(
+                    'actions.delete_document.no_document_given',
+                    ConfigurationUtility::EXTENSION
+                ),
                 '',
                 AbstractMessage::ERROR
             );
         } elseif ($this->elasticSearchService->removeDocument($document, $index)) {
             $this->addFlashMessage(
-                LocalizationUtility::translate('actions.delete_document.successful', ConfigurationUtility::EXTENSION, [$document]),
+                LocalizationUtility::translate(
+                    'actions.delete_document.successful',
+                    ConfigurationUtility::EXTENSION,
+                    [$document]
+                ),
                 '',
                 AbstractMessage::OK
             );
         } else {
             $this->addFlashMessage(
-                LocalizationUtility::translate('actions.delete_document.unsuccessful', ConfigurationUtility::EXTENSION, [$document]),
+                LocalizationUtility::translate(
+                    'actions.delete_document.unsuccessful',
+                    ConfigurationUtility::EXTENSION,
+                    [$document]
+                ),
                 '',
                 AbstractMessage::WARNING
             );
@@ -117,11 +141,12 @@ class IndexController extends ModuleActionController
 
     /**
      * Action: Flush specific index
-     * @param string $index
+     *
+     * @param  string  $index
      * @throws \TYPO3\CMS\Extbase\Mvc\Exception\StopActionException
      * @throws \TYPO3\CMS\Extbase\Mvc\Exception\UnsupportedRequestTypeException
      */
-    public function flushIndexAction($index = ''): void
+    public function flushIndexAction(string $index = ''): void
     {
         if (empty($index)) {
             $this->addFlashMessage(
@@ -131,13 +156,21 @@ class IndexController extends ModuleActionController
             );
         } elseif ($this->elasticSearchService->flush((string)$index)) {
             $this->addFlashMessage(
-                LocalizationUtility::translate('actions.flush.index_flushed', ConfigurationUtility::EXTENSION, [$index]),
+                LocalizationUtility::translate(
+                    'actions.flush.index_flushed',
+                    ConfigurationUtility::EXTENSION,
+                    [$index]
+                ),
                 '',
                 AbstractMessage::OK
             );
         } else {
             $this->addFlashMessage(
-                LocalizationUtility::translate('actions.flush.no_index_flushed', ConfigurationUtility::EXTENSION, [$index]),
+                LocalizationUtility::translate(
+                    'actions.flush.no_index_flushed',
+                    ConfigurationUtility::EXTENSION,
+                    [$index]
+                ),
                 '',
                 AbstractMessage::WARNING
             );

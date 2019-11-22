@@ -2,11 +2,11 @@
 
 namespace Serfhos\MySearchCrawler\Exception;
 
+use UnexpectedValueException;
+
 /**
  * Exception: Invalid configuration
- *
- * @package Serfhos\MySearchCrawler\Exception
  */
-class InvalidConfigurationException extends \UnexpectedValueException implements ExtensionException
+class InvalidConfigurationException extends UnexpectedValueException implements ExtensionException
 {
 }
