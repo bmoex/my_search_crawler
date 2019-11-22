@@ -4,12 +4,13 @@ namespace Serfhos\MySearchCrawler\Request;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Psr7\Uri;
+use GuzzleHttp\TransferStats;
 use InvalidArgumentException;
 use Serfhos\MySearchCrawler\Exception\RequestNotFoundException;
 use Serfhos\MySearchCrawler\Exception\ShouldIndexException;
 use Serfhos\MySearchCrawler\Utility\ConfigurationUtility;
 use Symfony\Component\DomCrawler\Crawler;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * WebRequest: Crawler
@@ -19,6 +20,9 @@ class CrawlerWebRequest
 
     /** @var \Psr\Http\Message\ResponseInterface */
     public $request;
+
+    /** @var \Psr\Http\Message\UriInterface */
+    protected $url;
 
     /** @var \Symfony\Component\DomCrawler\Crawler */
     protected $crawler;
@@ -33,13 +37,19 @@ class CrawlerWebRequest
     {
         try {
             $this->request = $client->get(
-                ConfigurationUtility::crawlUrl($uri)
+                ConfigurationUtility::crawlUrl($uri),
+                [
+                    'on_stats' => function (TransferStats $stats) use (&$url): void {
+                        $url = $stats->getEffectiveUri();
+                    },
+                ]
             );
             $this->crawler = new Crawler(
                 (string)$this->request->getBody(),
                 $uri,
                 (string)$client->getConfig('base_uri')
             );
+            $this->url = $url;
         } catch (GuzzleException $e) {
             // Catch all possible guzzle exceptions..
             throw new RequestNotFoundException(
@@ -71,30 +81,44 @@ class CrawlerWebRequest
             );
         }
 
-        // Check if link is different than canonical
         try {
-            $crawledUrl = $this->crawler->getUri();
+            $crawledUrl = new Uri($this->crawler->getUri());
+            $effectiveUrl = new Uri($this->url);
+
+            if ($effectiveUrl->getAuthority() !== $crawledUrl->getAuthority()) {
+                ShouldIndexException::throw(
+                    'Link is not the same authority, seems this document should not be indexed.',
+                    ['requested' => $crawledUrl, 'effective' => $effectiveUrl],
+                    1547025139698
+                );
+            }
+
+            // Check if link is different than canonical
             $canonicalUrl = $this->crawler->filter('link[rel=canonical]')->last()->attr('href');
-            if (GeneralUtility::isValidUrl($canonicalUrl)) {
-                if ($canonicalUrl !== $crawledUrl) {
-                    ShouldIndexException::throw(
-                        'Canonical link differs from requested url',
-                        ['canonical' => $canonicalUrl, 'requested' => $this->crawler->getUri()],
-                        1547025139698
-                    );
-                }
-            } else {
-                $relativeCrawledUrl = preg_replace('#^(://|[^/?])+#', '', $crawledUrl);
-                if ($canonicalUrl !== $relativeCrawledUrl) {
-                    ShouldIndexException::throw(
-                        'Canonical link differs from requested relative url',
-                        [
-                            'canonical' => $canonicalUrl,
-                            'requested' => $this->crawler->getUri(),
-                            'relative' => $relativeCrawledUrl,
-                        ],
-                        1574266503139
-                    );
+            if ($canonicalUrl !== null) {
+                $canonicalUrl = new Uri($canonicalUrl);
+
+                if (Uri::isAbsolute($canonicalUrl)) {
+                    if (!Uri::isSameDocumentReference($canonicalUrl, $crawledUrl)) {
+                        ShouldIndexException::throw(
+                            'Canonical link differs from requested url',
+                            ['canonical' => $canonicalUrl, 'requested' => $crawledUrl],
+                            1547025139698
+                        );
+                    }
+                } else {
+                    $relativeUrl = preg_replace('#^(://|[^/?])+#', '', (int)$effectiveUrl);
+                    if ($canonicalUrl !== $crawledUrl) {
+                        ShouldIndexException::throw(
+                            'Canonical link differs from requested relative url',
+                            [
+                                'canonical' => $canonicalUrl,
+                                'requested' => $crawledUrl,
+                                'relative' => $relativeUrl,
+                            ],
+                            1574266503139
+                        );
+                    }
                 }
             }
         } catch (InvalidArgumentException $e) {
