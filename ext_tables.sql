@@ -12,7 +12,6 @@ CREATE TABLE tx_mysearchcrawler_domain_model_queue (
     caller text,
 
     PRIMARY KEY (uid),
-    KEY parent (pid),
     KEY running (running),
     UNIQUE unique_hash (identifier)
 );
