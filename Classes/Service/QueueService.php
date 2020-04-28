@@ -54,7 +54,7 @@ class QueueService
     /**
      * @param  string  $url
      * @param  array|null  $caller
-     * @return boolean
+     * @return bool
      */
     public function enqueue(string $url, ?array $caller = null): bool
     {
@@ -73,8 +73,8 @@ class QueueService
     }
 
     /**
-     * @param  integer  $uid
-     * @return boolean
+     * @param  int  $uid
+     * @return bool
      */
     public function dequeue(int $uid): bool
     {
@@ -84,7 +84,7 @@ class QueueService
     /**
      * Get queue generator for parallel executions
      *
-     * @param  integer  $limit
+     * @param  int  $limit
      * @return \Generator
      */
     public function getQueue(int $limit): ?Generator

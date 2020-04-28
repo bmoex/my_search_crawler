@@ -1,4 +1,5 @@
 <?php
+
 call_user_func(function ($extension): void {
     // Register main module icon
     \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\TYPO3\CMS\Core\Imaging\IconRegistry::class)

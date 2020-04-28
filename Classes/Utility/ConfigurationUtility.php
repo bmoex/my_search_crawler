@@ -45,7 +45,7 @@ class ConfigurationUtility
     }
 
     /**
-     * @return boolean
+     * @return bool
      */
     public static function verify(): bool
     {

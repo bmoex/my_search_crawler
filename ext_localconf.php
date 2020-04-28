@@ -1,4 +1,5 @@
 <?php
+
 call_user_func(function ($extension): void {
     $GLOBALS['TYPO3_CONF_VARS']['FE']['eID_include'][$extension . '_autocomplete'] =
         \Serfhos\MySearchCrawler\Controller\SearchAPIController::class . '::autocomplete';

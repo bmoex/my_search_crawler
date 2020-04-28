@@ -17,9 +17,6 @@ class SimulatedUserService
     /** @var \TYPO3\CMS\Frontend\Authentication\FrontendUserAuthentication */
     protected $frontendUserAuthentication;
 
-    /**
-     * SimulatedUserService constructor.
-     */
     public function __construct()
     {
         // @deprecated should find a new opening to generate FE user for cli commands
@@ -27,7 +24,7 @@ class SimulatedUserService
     }
 
     /**
-     * @param  integer  $frontendUserId
+     * @param int $frontendUserId
      * @return \GuzzleHttp\Client
      */
     public static function createClientForFrontendUser(int $frontendUserId): Client
@@ -48,7 +45,7 @@ class SimulatedUserService
     }
 
     /**
-     * @param  integer  $frontendUserId
+     * @param int $frontendUserId
      * @return string
      */
     public function getSessionId(int $frontendUserId): ?string

@@ -15,7 +15,7 @@ class ShouldIndexException extends LogicException implements ExtensionException
     /**
      * @param  string  $message
      * @param  array  $context
-     * @param  integer  $code
+     * @param int $code
      */
     public static function throw(string $message, array $context, int $code): void
     {

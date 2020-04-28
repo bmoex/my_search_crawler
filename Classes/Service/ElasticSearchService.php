@@ -21,9 +21,6 @@ class ElasticSearchService implements SingletonInterface
     /** @var \Elasticsearch\Client */
     protected $client;
 
-    /**
-     * ElasticSearchService constructor.
-     */
     public function __construct()
     {
         $this->setIndex(ConfigurationUtility::index());

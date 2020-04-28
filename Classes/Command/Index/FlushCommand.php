@@ -22,13 +22,14 @@ class FlushCommand extends Command
     }
 
     /**
+     * Flush full index
+     *
      * @param  \Symfony\Component\Console\Input\InputInterface  $input
      * @param  \Symfony\Component\Console\Output\OutputInterface  $output
      * @return int|null
      */
     public function execute(InputInterface $input, OutputInterface $output): int
     {
-        // Flush full index
         $this->getElasticSearchService()->flush();
         $output->writeln('<info>Index is flushed!</info>');
 

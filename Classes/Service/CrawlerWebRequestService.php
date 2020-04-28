@@ -37,7 +37,7 @@ class CrawlerWebRequestService
      * @param  \GuzzleHttp\Client  $client
      * @param  string  $url
      * @param  bool  $throwable
-     * @return boolean
+     * @return bool
      */
     public function crawl(Client $client, string $url, bool $throwable = false): bool
     {
