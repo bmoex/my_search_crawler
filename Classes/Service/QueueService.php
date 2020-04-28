@@ -17,6 +17,9 @@ class QueueService
 {
     public const TABLE = 'tx_mysearchcrawler_domain_model_queue';
 
+    /** @var int */
+    protected $runtime;
+
     /** @var string */
     protected $queueId;
 
@@ -28,6 +31,7 @@ class QueueService
      */
     public function __construct()
     {
+        $this->runtime = time();
         $this->queueId = md5(uniqid('', true));
         $this->connection = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getConnectionForTable(self::TABLE);
@@ -64,7 +68,8 @@ class QueueService
         }
 
         return (bool)$this->connection->insert(self::TABLE, [
-            'crdate' => time(),
+            'crdate' => $this->runtime,
+            'tstamp' => $this->runtime,
             'cruser_id' => $GLOBALS['BE_USER']->user['id'] ?? 0,
             'identifier' => $identifier,
             'page_url' => $url,
@@ -82,6 +87,15 @@ class QueueService
     }
 
     /**
+     * @param  int  $uid
+     * @return bool
+     */
+    public function touch(int $uid): bool
+    {
+        return (bool)$this->connection->update(self::TABLE, ['tstamp' => $this->runtime], ['uid' => $uid]);
+    }
+
+    /**
      * Get queue generator for parallel executions
      *
      * @param  int  $limit
@@ -93,8 +107,8 @@ class QueueService
             $this->connection->executeUpdate(
                 'UPDATE ' . self::TABLE . ' '
                 . ' SET running = "' . $this->queueId . '" '
-                . ' WHERE running = "" '
-                . ' LIMIT ' . $limit
+                . ' WHERE running = ""'
+                . ' ORDER BY tstamp ASC LIMIT ' . $limit
             );
             $result = $this->connection->select(
                 ['uid', 'identifier', 'page_url', 'caller'],

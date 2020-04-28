@@ -4,6 +4,7 @@ namespace Serfhos\MySearchCrawler\Command\Index;
 
 use DateTime;
 use Exception;
+use Serfhos\MySearchCrawler\Command\Traits\EnsureEnvironment;
 use Serfhos\MySearchCrawler\Service\ElasticSearchService;
 use Serfhos\MySearchCrawler\Service\QueueService;
 use Symfony\Component\Console\Command\Command;
@@ -17,6 +18,8 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  */
 class RequeueCommand extends Command
 {
+    use EnsureEnvironment;
+
     /** @var \Serfhos\MySearchCrawler\Service\ElasticSearchService */
     protected $elasticSearchService;
 
@@ -30,6 +33,7 @@ class RequeueCommand extends Command
      */
     protected function configure(): void
     {
+        $this->ensureRequiredEnvironment();
         $this->setDescription('Add crawled url in current indexation');
         $this->addArgument('indexedSince', InputArgument::OPTIONAL);
     }

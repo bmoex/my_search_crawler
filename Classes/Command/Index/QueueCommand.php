@@ -2,6 +2,8 @@
 
 namespace Serfhos\MySearchCrawler\Command\Index;
 
+use Elasticsearch\Common\Exceptions\ElasticsearchException;
+use Serfhos\MySearchCrawler\Command\Traits\EnsureEnvironment;
 use Serfhos\MySearchCrawler\Service\CrawlerWebRequestService;
 use Serfhos\MySearchCrawler\Service\ElasticSearchService;
 use Serfhos\MySearchCrawler\Service\QueueService;
@@ -18,6 +20,8 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  */
 class QueueCommand extends Command
 {
+    use EnsureEnvironment;
+
     /** @var \Serfhos\MySearchCrawler\Service\QueueService */
     protected $queueService;
 
@@ -26,6 +30,7 @@ class QueueCommand extends Command
      */
     protected function configure(): void
     {
+        $this->ensureRequiredEnvironment();
         $this->setDescription('Process queue');
         $this->addArgument('limit', InputArgument::OPTIONAL, 'Limit of queue', 50);
         $this->addArgument('frontendUserId', InputArgument::OPTIONAL, 'Frontend User to simulate', 0);
@@ -59,12 +64,18 @@ class QueueCommand extends Command
         $progressBar = new ProgressBar($output, $limit);
         foreach ($this->getQueueService()->getQueue($limit) as $row) {
             $url = $row['page_url'] ?? '';
-            if ($url !== '' && $this->getCrawlerWebRequestService()->crawl($client, $url)) {
-                $indexed++;
+            try {
+                if ($url !== '' && $this->getCrawlerWebRequestService()->crawl($client, $url)) {
+                    $indexed++;
+                }
+
+                // Always dequeue when handled, even if not handled
+                $this->getQueueService()->dequeue((int)$row['uid']);
+            } catch (ElasticsearchException $e) {
+                // Make sure processed item is touched
+                $this->getQueueService()->touch((int)$row['uid']);
             }
 
-            // Always dequeue when handled, even if exception is thrown
-            $this->getQueueService()->dequeue((int)$row['uid']);
             $progressBar->advance();
         }
 

@@ -2,6 +2,7 @@
 
 namespace Serfhos\MySearchCrawler\Command;
 
+use Serfhos\MySearchCrawler\Command\Traits\EnsureEnvironment;
 use Serfhos\MySearchCrawler\Service\QueueService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\ProgressBar;
@@ -10,25 +11,30 @@ use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Database\Query\QueryHelper;
+use TYPO3\CMS\Core\Database\QueryGenerator;
 use TYPO3\CMS\Core\Site\SiteFinder;
-use TYPO3\CMS\Core\TypoScript\TemplateService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
-use TYPO3\CMS\Frontend\Page\PageRepository;
+use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
 
 /**
  * Queue all available urls into the crawler index
  */
 class QueueAllKnownUrlsCommand extends Command
 {
+    use EnsureEnvironment;
+
     /** @var \Serfhos\MySearchCrawler\Service\QueueService */
     protected $queueService;
+
+    /** @var \TYPO3\CMS\Core\Database\QueryGenerator */
+    protected $queryGenerator;
 
     /**
      * Configure the command by defining the name, options and arguments
      */
     protected function configure(): void
     {
+        $this->ensureRequiredEnvironment();
         $this->setDescription('Queue all known pages for each configured Site based on TYPO3 context');
     }
 
@@ -41,8 +47,8 @@ class QueueAllKnownUrlsCommand extends Command
      */
     public function execute(InputInterface $input, OutputInterface $output): ?int
     {
+        /** @var \TYPO3\CMS\Core\Site\Entity\Site $site */
         foreach (GeneralUtility::makeInstance(SiteFinder::class)->getAllSites() as $site) {
-            $this->initializeTypoScriptFrontendEnvironment($site->getRootPageId());
             $query = $this->getPagesQuery($site->getRootPageId());
             $result = $query->execute();
             $output->writeln('<info>Site: ' . $site->getIdentifier() . '</info>');
@@ -75,17 +81,17 @@ class QueueAllKnownUrlsCommand extends Command
     protected function getPagesQuery(
         int $rootPageId,
         ?string $additionalWhere = 'no_index = 0 AND canonical_link = ""',
-        ?array $excludedDocumentTypes = [3, 4, 6, 7, 199, 254, 255]
+        ?array $excludedDocumentTypes = [3, 4, 6, 7, 199]
     ): QueryBuilder {
-        $cObj = $GLOBALS['TSFE']->cObj;
-        $treeList = $cObj->getTreeList(-$rootPageId, 99, 0, true);
-        $treeListArray = GeneralUtility::intExplode(',', $treeList);
+        $treeList = $this->getQueryGenerator()->getTreeList($rootPageId, 99, 0, true);
 
+        /** @var \TYPO3\CMS\Core\Database\Query\QueryBuilder $queryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getQueryBuilderForTable('pages');
 
         $constraints = [
-            $queryBuilder->expr()->in('uid', $treeListArray),
+            $queryBuilder->expr()->in('uid', $treeList),
+            $queryBuilder->expr()->lt('doktype', 200),
         ];
 
         if ($additionalWhere !== null) {
@@ -103,30 +109,6 @@ class QueueAllKnownUrlsCommand extends Command
     }
 
     /**
-     * @param  int  $rootPageId
-     * @return void
-     */
-    public function initializeTypoScriptFrontendEnvironment(int $rootPageId): void
-    {
-        // This usually happens when typolink is created by the TYPO3 Backend, where no TSFE object
-        // is there. This functionality is currently completely internal, as these links cannot be
-        // created properly from the Backend.
-        // However, this is added to avoid any exceptions when trying to create a link
-        $GLOBALS['TSFE'] = GeneralUtility::makeInstance(
-            TypoScriptFrontendController::class,
-            null,
-            $rootPageId,
-            0
-        );
-        $GLOBALS['TSFE']->sys_page = GeneralUtility::makeInstance(PageRepository::class);
-        $GLOBALS['TSFE']->tmpl = GeneralUtility::makeInstance(TemplateService::class);
-        $GLOBALS['TSFE']->initFEuser();
-        $GLOBALS['TSFE']->newCObj();
-        $GLOBALS['TSFE']->domainStartPage = $rootPageId;
-        $GLOBALS['TSFE']->fetch_the_id();
-    }
-
-    /**
      * Wrapper for generating url via TypoLink functionality
      *
      * @param  int  $page
@@ -134,8 +116,12 @@ class QueueAllKnownUrlsCommand extends Command
      */
     public function generateUrl(int $page): ?string
     {
-        $url = $GLOBALS['TSFE']->cObj->typoLink_URL([
+        /** @var \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer $cObj */
+        $cObj = GeneralUtility::makeInstance(ContentObjectRenderer::class);
+
+        $url = (string)$cObj->typoLink('', [
             'parameter' => 't3://page?uid=' . $page,
+            'returnLast' => 'url',
             'forceAbsoluteUrl' => true,
         ]);
         if (!GeneralUtility::isValidUrl($url)) {
@@ -155,5 +141,17 @@ class QueueAllKnownUrlsCommand extends Command
         }
 
         return $this->queueService;
+    }
+
+    /**
+     * @return \TYPO3\CMS\Core\Database\QueryGenerator
+     */
+    protected function getQueryGenerator(): QueryGenerator
+    {
+        if ($this->queryGenerator === null) {
+            $this->queryGenerator = GeneralUtility::makeInstance(QueryGenerator::class);
+        }
+
+        return $this->queryGenerator;
     }
 }
