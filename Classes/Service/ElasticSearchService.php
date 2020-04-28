@@ -200,9 +200,6 @@ class ElasticSearchService implements SingletonInterface
             $this->client->indices()->create([
                 'index' => $this->index,
                 'body' => [
-                    'settings' => [
-                        'number_of_shards' => 1,
-                    ],
                     'mappings' => [
                         self::INDEX_TYPE => [
                             'properties' => $document->getIndexProperties(),
