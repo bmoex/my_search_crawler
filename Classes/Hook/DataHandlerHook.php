@@ -24,6 +24,14 @@ class DataHandlerHook
     protected $queueService;
 
     /**
+     * @param  \Serfhos\MySearchCrawler\Service\QueueService|null  $queueService
+     */
+    public function __construct(?QueueService $queueService = null)
+    {
+        $this->queueService = $queueService ?? GeneralUtility::makeInstance(QueueService::class);
+    }
+
+    /**
      * @param  string  $status
      * @param  string  $table
      * @param  int  $id
@@ -134,22 +142,10 @@ class DataHandlerHook
                 return;
             }
 
-            $this->getQueueService()->enqueue($url, ['through' => 'DataHandlerHook']);
+            $this->queueService->enqueue($url, ['through' => 'DataHandlerHook']);
         }
 
         // Always clear page ids for possible duplicated usage
         $this->pageIds = [];
-    }
-
-    /**
-     * @return \Serfhos\MySearchCrawler\Service\QueueService
-     */
-    protected function getQueueService(): QueueService
-    {
-        if ($this->queueService === null) {
-            $this->queueService = GeneralUtility::makeInstance(QueueService::class);
-        }
-
-        return $this->queueService;
     }
 }

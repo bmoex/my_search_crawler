@@ -6,6 +6,7 @@ use Serfhos\MySearchCrawler\Service\QueueService;
 use TYPO3\CMS\Core\SingletonInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
+use TYPO3\CMS\Frontend\Utility\CanonicalizationUtility;
 
 // Ignore sniff for custom hooks from TYPO3 Core
 // phpcs:disable PSR1.Methods.CamelCapsMethodName.NotCamelCaps
@@ -20,33 +21,41 @@ class PageIndexingHook implements SingletonInterface
     protected $queueService;
 
     /**
+     * @param  \Serfhos\MySearchCrawler\Service\QueueService|null  $queueService
+     */
+    public function __construct(?QueueService $queueService = null)
+    {
+        $this->queueService = $queueService ?? GeneralUtility::makeInstance(QueueService::class);
+    }
+
+    /**
      * @param  \TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController  $reference
      * @return void
      * @see \TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController::generatePage_postProcessing
      */
     public function hook_indexContent(TypoScriptFrontendController $reference): void
     {
-        $url = GeneralUtility::getIndpEnv('TYPO3_REQUEST_URL');
-        if ($url === '') {
-            return;
-        }
+        // Build current url with typolink
+        $url = $reference->cObj->typoLink_URL([
+            'parameter' => $reference->id . ',' . $reference->type,
+            'forceAbsoluteUrl' => true,
+            'addQueryString' => true,
+            'addQueryString.' => [
+                'method' => 'GET',
+                'exclude' => implode(
+                    ',',
+                    CanonicalizationUtility::getParamsToExcludeForCanonicalizedUrl(
+                        (int)$reference->id,
+                        (array)$GLOBALS['TYPO3_CONF_VARS']['FE']['additionalCanonicalizedUrlParameters']
+                    )
+                ),
+            ],
+        ]);
 
         if (!GeneralUtility::isValidUrl($url)) {
             return;
         }
 
-        $this->getQueueService()->enqueue($url, ['through' => 'PageIndexingHook']);
-    }
-
-    /**
-     * @return \Serfhos\MySearchCrawler\Service\QueueService
-     */
-    protected function getQueueService(): QueueService
-    {
-        if ($this->queueService === null) {
-            $this->queueService = GeneralUtility::makeInstance(QueueService::class);
-        }
-
-        return $this->queueService;
+        $this->queueService->enqueue($url, ['through' => 'PageIndexingHook']);
     }
 }
