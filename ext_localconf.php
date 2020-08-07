@@ -6,6 +6,14 @@ call_user_func(function ($extension): void {
     $GLOBALS['TYPO3_CONF_VARS']['FE']['eID_include'][$extension . '_search'] =
         \Serfhos\MySearchCrawler\Controller\SearchAPIController::class . '::search';
 
+    // Register main module icon
+    \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\TYPO3\CMS\Core\Imaging\IconRegistry::class)
+        ->registerIcon(
+            'module-' . $extension,
+            \TYPO3\CMS\Core\Imaging\IconProvider\FontawesomeIconProvider::class,
+            ['name' => 'search']
+        );
+
     \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\TYPO3\CMS\Extbase\Object\Container\Container::class)
         ->registerImplementation(
             \Serfhos\MySearchCrawler\Domain\Model\Index\ElasticSearchIndex::class,
