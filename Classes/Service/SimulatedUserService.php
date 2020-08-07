@@ -5,7 +5,8 @@ namespace Serfhos\MySearchCrawler\Service;
 use GuzzleHttp\Client;
 use Serfhos\MySearchCrawler\Utility\ConfigurationUtility;
 use TYPO3\CMS\Core\Utility\ArrayUtility;
-use TYPO3\CMS\Frontend\Utility\EidUtility;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Frontend\Authentication\FrontendUserAuthentication;
 
 /**
  * Service: Simulated Frontend User Session
@@ -17,19 +18,27 @@ class SimulatedUserService
     /** @var \TYPO3\CMS\Frontend\Authentication\FrontendUserAuthentication */
     protected $frontendUserAuthentication;
 
-    public function __construct()
+    /**
+     * @param  \TYPO3\CMS\Frontend\Authentication\FrontendUserAuthentication|null  $frontendUserAuthentication
+     */
+    public function __construct(?FrontendUserAuthentication $frontendUserAuthentication = null)
     {
-        // @deprecated should find a new opening to generate FE user for cli commands
-        $this->frontendUserAuthentication = EidUtility::initFeUser();
+        if ($frontendUserAuthentication === null) {
+            // @deprecated should find a new opening to generate FE user for cli commands
+            $frontendUserAuthentication = GeneralUtility::makeInstance(FrontendUserAuthentication::class);
+            $frontendUserAuthentication->start();
+            $frontendUserAuthentication->unpack_uc();
+        }
+
+        $this->frontendUserAuthentication = $frontendUserAuthentication;
     }
 
     /**
-     * @param int $frontendUserId
+     * @param  int  $frontendUserId
      * @return \GuzzleHttp\Client
      */
-    public static function createClientForFrontendUser(int $frontendUserId): Client
+    public function createClientForFrontendUser(int $frontendUserId): Client
     {
-        $simulatedService = new self();
         $httpOptions = $GLOBALS['TYPO3_CONF_VARS']['HTTP'];
         ArrayUtility::mergeRecursiveWithOverrule($httpOptions, [
             'timeout' => self::INDEX_CONNECTION_TIME_OUT,
@@ -37,7 +46,7 @@ class SimulatedUserService
             'verify' => ConfigurationUtility::verify(),
         ]);
 
-        if ($frontendUserId > 0 && $user = $simulatedService->getSessionId($frontendUserId)) {
+        if ($frontendUserId > 0 && $user = $this->getSessionId($frontendUserId)) {
             $httpOptions['headers']['Cookie'] .= 'fe_typo_user=' . $user . ';';
         }
 
@@ -45,12 +54,11 @@ class SimulatedUserService
     }
 
     /**
-     * @param int $frontendUserId
+     * @param  int  $frontendUserId
      * @return string
      */
     public function getSessionId(int $frontendUserId): ?string
     {
-        $this->frontendUserAuthentication->logoff();
         $user = $this->frontendUserAuthentication->getRawUserByUid($frontendUserId);
         if (!empty($user)) {
             // Force disabled IP lock on this created user session
@@ -64,7 +72,7 @@ class SimulatedUserService
     }
 
     /**
-     * Always invoke logoff to clean the possible stored sessions
+     * Always invoke close to clean the possible stored sessions
      */
     public function __destruct()
     {

@@ -27,14 +27,15 @@ class QueueService
     protected $connection;
 
     /**
-     * Constructor: Service: Queue
+     * @param  \TYPO3\CMS\Core\Database\Connection|null  $connection
      */
-    public function __construct()
+    public function __construct(?Connection $connection = null)
     {
         $this->runtime = time();
         $this->queueId = md5(uniqid('', true));
-        $this->connection = GeneralUtility::makeInstance(ConnectionPool::class)
-            ->getConnectionForTable(self::TABLE);
+        $this->connection = $connection
+            ?? GeneralUtility::makeInstance(ConnectionPool::class)
+                ->getConnectionForTable(self::TABLE);
     }
 
     /**
@@ -131,7 +132,7 @@ class QueueService
             );
         } catch (DBALException $e) {
             // Never throw exception, just log
-            $this->getLogger()->error('1543405006140:' . $e->getMessage(), [$e]);
+            $this->getLogger()->error('1596803352:' . $e->getMessage(), [$e]);
         }
     }
 

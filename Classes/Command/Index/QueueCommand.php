@@ -60,7 +60,9 @@ class QueueCommand extends Command
     protected function processQueue(OutputInterface $output, int $limit, int $frontendUserId): void
     {
         $indexed = 0;
-        $client = SimulatedUserService::createClientForFrontendUser($frontendUserId);
+        $simulatedUserService = $this->getSimulatedUserService();
+
+        $client = $simulatedUserService->createClientForFrontendUser($frontendUserId);
         $progressBar = new ProgressBar($output, $limit);
         foreach ($this->getQueueService()->getQueue($limit) as $row) {
             $url = $row['page_url'] ?? '';
@@ -112,5 +114,13 @@ class QueueCommand extends Command
     public function getElasticSearchService(): ElasticSearchService
     {
         return GeneralUtility::makeInstance(ElasticSearchService::class);
+    }
+
+    /**
+     * @return \Serfhos\MySearchCrawler\Service\SimulatedUserService
+     */
+    public function getSimulatedUserService(): SimulatedUserService
+    {
+        return GeneralUtility::makeInstance(SimulatedUserService::class);
     }
 }

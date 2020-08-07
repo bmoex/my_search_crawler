@@ -54,7 +54,7 @@ class CrawlerWebRequest
             // Catch all possible guzzle exceptions..
             throw new RequestNotFoundException(
                 $uri . '::' . $e->getMessage(),
-                1542805489772
+                1542805489
             );
         }
     }
@@ -69,7 +69,7 @@ class CrawlerWebRequest
             ShouldIndexException::throw(
                 'No request or crawler defined',
                 ['request' => $this->request, 'crawler' => $this->crawler],
-                1547025004140
+                1547025004
             );
         }
 
@@ -77,7 +77,7 @@ class CrawlerWebRequest
             ShouldIndexException::throw(
                 'No `Found` (200) status response retrieved',
                 ['statusCode' => $this->request->getStatusCode()],
-                1547025092838
+                1547025092
             );
         }
 
@@ -89,7 +89,7 @@ class CrawlerWebRequest
                 ShouldIndexException::throw(
                     'Link is not the same authority, seems this document should not be indexed.',
                     ['requested' => $crawledUrl, 'effective' => $effectiveUrl],
-                    1547025139698
+                    1596803191
                 );
             }
 
@@ -103,7 +103,7 @@ class CrawlerWebRequest
                         ShouldIndexException::throw(
                             'Canonical link differs from requested url',
                             ['canonical' => $canonicalUrl, 'requested' => $crawledUrl],
-                            1547025139698
+                            1596803194
                         );
                     }
                 } else {
@@ -116,7 +116,7 @@ class CrawlerWebRequest
                                 'requested' => $crawledUrl,
                                 'relative' => $relativeUrl,
                             ],
-                            1574266503139
+                            1596803199
                         );
                     }
                 }
@@ -133,7 +133,7 @@ class CrawlerWebRequest
                     ShouldIndexException::throw(
                         'X-Robots-Tag header retrieved with no index',
                         ['robots' => $tags],
-                        1547025168687
+                        1596803331
                     );
                 }
             }
@@ -145,7 +145,7 @@ class CrawlerWebRequest
                 ShouldIndexException::throw(
                     '<meta> robots tag configured with no index',
                     ['robots' => $robots],
-                    1547025221601
+                    1596803334
                 );
             }
         } catch (InvalidArgumentException $e) {

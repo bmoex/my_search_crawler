@@ -28,7 +28,7 @@ class ConfigurationUtility
         if (isset($configuration['elastic_search_hosts']) && is_array($configuration['elastic_search_hosts'])) {
             return $configuration['elastic_search_hosts'];
         }
-        throw new InvalidConfigurationException('No hosts found in configuration', 1535981719668);
+        throw new InvalidConfigurationException('No hosts found in configuration', 1596803384);
     }
 
     /**
@@ -102,7 +102,7 @@ class ConfigurationUtility
             }
 
             if (empty(static::$configuration)) {
-                throw new InvalidConfigurationException('No extension configuration found', 1535981656946);
+                throw new InvalidConfigurationException('No extension configuration found', 1596803393);
             }
         }
 

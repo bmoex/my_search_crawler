@@ -36,7 +36,9 @@ class AddCommand extends Command
     {
         $url = $input->getArgument('url');
         $frontendUserId = $input->getArgument('frontendUserId') ?: 0;
-        $client = SimulatedUserService::createClientForFrontendUser($frontendUserId);
+        $simulatedUserService = $this->getSimulatedUserService();
+
+        $client = $simulatedUserService->createClientForFrontendUser($frontendUserId);
 
         try {
             if ($this->getCrawlerWebRequestService()->crawl($client, $url, true)) {
@@ -64,5 +66,13 @@ class AddCommand extends Command
     public function getCrawlerWebRequestService(): CrawlerWebRequestService
     {
         return GeneralUtility::makeInstance(CrawlerWebRequestService::class);
+    }
+
+    /**
+     * @return \Serfhos\MySearchCrawler\Service\SimulatedUserService
+     */
+    public function getSimulatedUserService(): SimulatedUserService
+    {
+        return GeneralUtility::makeInstance(SimulatedUserService::class);
     }
 }
